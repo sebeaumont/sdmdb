@@ -82,7 +82,7 @@ int main(int argc, const char** argv) {
   using namespace molemind::sdm;
   
   // announce
-  string banner = "SDM frametrainer - Copyright (c) 2016 Simon Beaumont - All Rights Reserved. See LICENCE for terms and conditions.";
+  string banner = "SDM frametrainer - Copyright (c) 2012-2018 Simon Beaumont - All Rights Reserved. See LICENCE for terms and conditions.";
   
   // command line options
   bool symmetric = false; // TODO
@@ -192,7 +192,7 @@ int main(int argc, const char** argv) {
 
       // we need to permute the pairs treating this as a partial order
       // with the relation > (which can be mapped to shift operator in due course)
-      // meanwhile the frame is "dimensionless" and relative position unobserved
+       // meanwhile the frame is "dimensionless" and relative position unobserved
       
       // un-ordered set of terms in frame... 
       set<string> termset(tv.begin()+1, tv.end());
