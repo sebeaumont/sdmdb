@@ -18,7 +18,7 @@ namespace molemind {
 
     namespace mms {
 
-      // what to call this really now we have it?
+      // operations of vectors of mixed types 
       
       template <typename T, std::size_t L, typename I>
       struct ephemeral_vector {
@@ -118,7 +118,23 @@ namespace molemind {
           }
           return count;
         }
-        
+
+                
+        inline const std::size_t inner(const I& v) const {
+          std::size_t count = 0;
+          #pragma unroll
+          #pragma clang loop vectorize(enable) interleave(enable)
+          for (std::size_t i=0; i < L; ++i) {
+            T r = _elem[i] & v[i];
+            #ifdef VELEMENT_64
+            count += __builtin_popcountll(r);
+            #else
+            count += __builtin_popcount(r);
+            #endif
+          }
+          return count;
+        }
+
         
         inline std::size_t countsum(ephemeral_vector& v) {
           std::size_t count = 0;
@@ -147,7 +163,17 @@ namespace molemind {
           // inverse of the normalized distance
           return 1.0 - (double) distance(v)/dimensions;
         }
-                                      
+
+        /// Overlap of vectors
+        inline double overlap(ephemeral_vector& v) {
+          return (double) inner(v)/dimensions;
+        }
+                                        
+        /// Overlap of vectors
+        inline double overlap(const I& v) const {
+          return (double) inner(v)/dimensions;
+        }
+
                                         
 
       private:

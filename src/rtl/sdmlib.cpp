@@ -244,14 +244,15 @@ const card_t sdm_space_get_topology(const space_t s,
   database::space::ephemeral_vector_t vec(v);
   card_t k = 0;
 
-  auto topo = sp->neighbourhood(vec, metric_lb, density_ub, card_ub);
+  // using the new topology metric
+  auto topo = sp->neighbourhood2(vec, metric_lb, density_ub, card_ub);
   // TODO speedup by passing t directly to neighbourhood fn?
   
   for (auto i = topo.begin(); i != topo.end(); ++i, ++t) {
     ++k;
     // XXX might be stable ptr as the symbol (*i) is probably stable and c_str() is a pointer not a copy
     t->symbol = i->name.c_str(); 
-    t->metric = i->similarity;
+    t->metric = i->similarity; // this overlap
     t->density = i->density;
   }
   return k; // XXX should be the actual level set cardinality (given contraints) 
