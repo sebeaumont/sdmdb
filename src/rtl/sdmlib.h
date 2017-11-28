@@ -116,6 +116,13 @@ extern "C" {
                                       const card_t,
                                       point_t*);
 
+  const card_t sdm_space_get_topology2(const space_t,
+                                       const vectordata_t*,
+                                       const double,
+                                       const double,
+                                       const card_t,
+                                       point_t*);
+  
   /**
    * symbol_t ->
    */
