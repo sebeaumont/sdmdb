@@ -83,6 +83,12 @@ extern "C" {
                                             symbol_t* symbol);
   
 
+  const status_t sdm_database_superpose(const database_t,
+                                        const char* target_spacename,
+                                        const char* target_symbolname,
+                                        const char* source_spacename,
+                                        const char* source_symbolname);
+  
   /**
    * space_t -> ...
    */

@@ -19,7 +19,8 @@ const status_t sdm_database(const char* filename,
     *db = new database::database(size, maxsize, std::string(filename));
     return AOK;
   } catch (const std::exception& e) {
-    fprintf(stderr, "RUNTIME EXCEPTION: %s\n", e.what());
+    fprintf(stderr, "SDMLIB: %s (sdm_database %s %lu %lu)\n",
+            e.what(), filename, size, maxsize);
     return ERUNTIME;
   }
 }
@@ -53,6 +54,19 @@ const status_t sdm_database_ensure_space(const database_t db,
   } catch (...) {
     return (const status_t) -errno;
   }
+}
+
+
+const status_t sdm_database_superpose(const database_t db,
+                                      const char* target_spacename,
+                                      const char* target_symbolname,
+                                      const char* source_spacename,
+                                      const char* source_symbolname) {
+  // delegate to db method
+  return static_cast<database::database*>(db)->superpose(target_spacename,
+                                                         target_symbolname,
+                                                         source_spacename,
+                                                         source_symbolname);
 }
 
 

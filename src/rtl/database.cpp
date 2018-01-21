@@ -45,7 +45,8 @@ namespace molemind {
     
     /// vector density
     
-    boost::optional<const double> database::density(const std::string& sn, const std::string& vn) noexcept {
+    boost::optional<const double> database::density(const std::string& sn,
+                                                    const std::string& vn) noexcept {
       auto sp = get_space_by_name(sn);
       if (sp == nullptr) {
         return boost::none;
@@ -58,7 +59,8 @@ namespace molemind {
     
     /// find symbols by prefix
     
-    boost::optional<database::symbol_list> database::prefix_search(const std::string& sn, const std::string& vp) noexcept {
+    boost::optional<database::symbol_list> database::prefix_search(const std::string& sn,
+                                                                   const std::string& vp) noexcept {
       auto sp = get_space_by_name(sn);
       if (sp) return sp->search(vp);
       else return boost::none;
