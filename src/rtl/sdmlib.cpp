@@ -16,7 +16,7 @@ const status_t sdm_database(const char* filename,
                             size_t maxsize,
                             database_t* db) {
   try {
-    *db = new database::database(size, maxsize, std::string(filename));
+    *db = new database(size, maxsize, std::string(filename));
     return AOK;
   } catch (const std::exception& e) {
     fprintf(stderr, "SDMLIB: %s (sdm_database %s %lu %lu)\n",
@@ -26,7 +26,7 @@ const status_t sdm_database(const char* filename,
 }
 
 const status_t sdm_database_close(const database_t db) {
-  delete static_cast<database::database*>(db);
+  delete static_cast<database*>(db);
   return AOK;
 }
 
@@ -34,7 +34,7 @@ const status_t sdm_database_get_space(const database_t db,
                                       const char* spacename,
                                       space_t* space) {
   database::space* sp =
-    static_cast<database::database*>(db)->get_space_by_name(std::string(spacename));
+    static_cast<database*>(db)->get_space_by_name(std::string(spacename));
   if (sp == nullptr) return ESPACE;
   *space = sp;
   return AOK;
@@ -44,7 +44,7 @@ const status_t sdm_database_ensure_space(const database_t db,
                                          const char* spacename,
                                          space_t* space) {
   try {
-    database::space* sp = static_cast<database::database*>(db)->
+    database::space* sp = static_cast<database*>(db)->
       ensure_space_by_name(std::string(spacename));
     if (sp == nullptr) return ERUNTIME; //?
     *space = sp;
@@ -63,10 +63,10 @@ const status_t sdm_database_superpose(const database_t db,
                                       const char* source_spacename,
                                       const char* source_symbolname) {
   // delegate to db method
-  return static_cast<database::database*>(db)->superpose(target_spacename,
-                                                         target_symbolname,
-                                                         source_spacename,
-                                                         source_symbolname);
+  return static_cast<database*>(db)->superpose(target_spacename,
+                                               target_symbolname,
+                                               source_spacename,
+                                               source_symbolname);
 }
 
 
@@ -74,7 +74,7 @@ const status_t sdm_database_ensure_space_symbol(const database_t db,
                                                 const char* spacename,
                                                 const char* symbolname,
                                                 symbol_t* sym) {
-  auto dp = static_cast<database::database*>(db);
+  auto dp = static_cast<database*>(db);
     // may create a space
   auto space = dp->ensure_space_by_name(spacename);
   if (!space) return ERUNTIME;
@@ -117,7 +117,7 @@ const status_t sdm_database_ensure_symbol(const database_t db,
                                           const char* symbolname,
                                           symbol_t* sym) {
 
-  auto dp = static_cast<database::database*>(db);
+  auto dp = static_cast<database*>(db);
   auto sp = static_cast<database::database::space*>(space);
     
 
