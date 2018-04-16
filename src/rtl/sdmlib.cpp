@@ -61,12 +61,14 @@ const status_t sdm_database_superpose(const database_t db,
                                       const char* target_spacename,
                                       const char* target_symbolname,
                                       const char* source_spacename,
-                                      const char* source_symbolname) {
+                                      const char* source_symbolname,
+                                      const int newbasis) {
   // delegate to db method
   return static_cast<database*>(db)->superpose(target_spacename,
                                                target_symbolname,
                                                source_spacename,
-                                               source_symbolname);
+                                               source_symbolname,
+                                               (bool) newbasis);
 }
 
 

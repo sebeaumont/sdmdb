@@ -16,9 +16,9 @@ namespace molemind { namespace sdm { namespace mms {
     typedef StringType shared_string_t;
     typedef Allocator void_allocator_t;
   
-    // see if this is useful... updating the node could be expensive.
-    //enum state_t { NEW, USED, OLD, FREE };
+    // state 
     std::size_t _id;
+    std::size_t _instance;
     shared_string_t _name;
   
   private:
@@ -32,6 +32,7 @@ namespace molemind { namespace sdm { namespace mms {
            const std::vector<size_t>& fp,
            const void_allocator_t& void_alloc)
       : _id(i),
+        _instance(0),
         _name(s, void_alloc),
         _basis(fp, ElementalBits, void_alloc) {}
     
@@ -48,16 +49,16 @@ namespace molemind { namespace sdm { namespace mms {
       return std::string(_name.begin(), _name.end());
     }
   
-  
+    
     typedef elemental_vector_t basis_vector_t;
-  
+
     inline const basis_vector_t& basis(void) const {
       return _basis;
     }
   
     // printer
     friend std::ostream& operator<<(std::ostream& os, const symbol& s) {
-      os << s._name;
+      os << s._name << ":" << s._instance;
       return os;
     }
   

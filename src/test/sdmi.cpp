@@ -223,7 +223,7 @@ int main(int argc, const char** argv) {
       
       /* TODO convert these to use abstract api */
         
-      } else if (boost::iequals(cv[0], "/")) {
+      } else if (boost::iequals(cv[0], "-")) {
         // array access to space
         boost::optional<database::space::vector&> v = get_vector(rts, default_spacename, cv[1]);
         // xxx
@@ -235,10 +235,12 @@ int main(int argc, const char** argv) {
       } else if (boost::iequals(cv[0], "+")) {
         rts.superpose(default_spacename, cv[1], default_spacename, cv[2]);
         boost::optional<database::space::vector&> v = get_vector(rts, default_spacename, cv[1]);
-        //boost::optional<database::space::vector&> u = get_vector(rts, default_spacename, cv[2]);
-        // optional guards? tee hee
-        //v->superpose(*u);
         std::cout << v->count() << std::endl;
+
+      } else if (boost::iequals(cv[0], "/")) {
+        rts.superpose(default_spacename, cv[1], default_spacename, cv[2], true);
+        boost::optional<const database::space::symbol&> s = get_symbol(rts, default_spacename, cv[2]);
+        std::cout << s << std::endl;
         
       } else if (boost::iequals(cv[0], "?")) {
         //rts.superpose(default_spacename, cv[1], default_spacename, cv[2]);
@@ -279,7 +281,8 @@ int main(int argc, const char** argv) {
         boost::optional<database::space::vector&> v = get_vector(rts, default_spacename, cv[1]);
         v->zeros();
         std::cout << v->count() << std::endl;
-    
+
+
 
       } else
         std::cout << "syntax error:" << input << std::endl;

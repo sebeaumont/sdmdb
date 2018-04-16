@@ -84,7 +84,8 @@ namespace molemind { namespace sdm {
     
     /// add or superpose
     status_t superpose(const std::string& ts, const std::string& tn,
-                       const std::string& ss, const std::string& sn);
+                       const std::string& ss, const std::string& sn,
+                       const bool newbasis = false);
   
     /// subtract
     status_t subtract(const std::string& ts, const std::string& tn,
@@ -158,8 +159,10 @@ namespace molemind { namespace sdm {
     boost::optional<space::vector&> get_vector(const std::string& space_name, const std::string& vector_name) noexcept;
 
     /// TODO add a list of vectors
+
+    /* not sure we should provide these */
+    /// randomise a vector 
     
-    /// randomise a vector
     void randomize_vector(boost::optional<space::vector&> vector, double p) noexcept;
 
     /// ones

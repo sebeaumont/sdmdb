@@ -79,9 +79,10 @@ namespace molemind {
       if (!space) return ERUNTIME;
       
       auto sym = space->get_symbol_by_name(vn);
-      if (sym) return AOLD; // found
-  
-      else try {
+      if (sym) {
+        return AOLD; // found
+        
+      } else try {
         // use insert to create a new symbol with elemental "fingerprint"
         database::space::inserted_t p = space->insert(vn, irand.shuffle());
         
@@ -113,7 +114,8 @@ namespace molemind {
     status_t database::superpose(const std::string& ts,
                                  const std::string& tn,
                                  const std::string& ss,
-                                 const std::string& sn)  {
+                                 const std::string& sn,
+                                 const bool newbasis)  {
       
       // assume all symbols are present
       status_t state = AOLD;
@@ -126,7 +128,7 @@ namespace molemind {
       
 
       // get source symbol
-      boost::optional<const space::symbol&> s = source_sp->get_symbol_by_name(sn);
+      boost::optional<const space::symbol&> s = source_sp->get_symbol_by_name(sn, newbasis);
       if (!s) {
         // TODO guard: if p.second else ...
         space::inserted_t p = source_sp->insert(sn, irand.shuffle());
@@ -141,8 +143,7 @@ namespace molemind {
       
       //////////////////////////////////////////////////////////////////////
       // CAVEAT: this must follow any insertions in the space
-      // as any insert to index WILL invalidate vector or symbol pointers...
-      // in whcih case is s still safe? hmmm something fishy here
+      // as any insert to index MAY invalidate vector or symbol pointers...
       
       boost::optional<space::vector&> v = target_sp->get_vector_by_name(tn);
       if (!v) {
@@ -153,8 +154,16 @@ namespace molemind {
         if (!v) return ERUNTIME;
         else state = ANEW;
       }
-
-      v->whitebits(s->basis());
+      
+      if (newbasis) {
+        // generate a new shifted basis
+        std::vector<std::size_t> vv;
+        for (auto v: s->basis()) vv.push_back((v + s->_instance) % space::vector::dimensions);
+        v->whitebits(vv);
+        
+      } else {
+        v->whitebits(s->basis());
+      }
       return state;
     }
     
@@ -202,6 +211,7 @@ namespace molemind {
         v->setbits(ilist.begin(), ilist.begin() + n);
       }
     }
+    
     
     void database::unit_vector(boost::optional<space::vector&> v) noexcept {
       if (v) v->ones();

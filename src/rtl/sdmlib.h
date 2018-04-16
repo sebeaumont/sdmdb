@@ -87,7 +87,8 @@ extern "C" {
                                         const char* target_spacename,
                                         const char* target_symbolname,
                                         const char* source_spacename,
-                                        const char* source_symbolname);
+                                        const char* source_symbolname,
+                                        const int newbasis);
   
   /**
    * space_t -> ...

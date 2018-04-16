@@ -73,7 +73,8 @@ namespace molemind { namespace sdm {
       // implement symbol type
       
       typedef symbol<segment_manager_t, shared_string_t, void_allocator_t, ElementalBits> symbol_t;
-      typedef typename symbol_t::basis_vector_t fingerprint_t;
+      typedef typename symbol_t::basis_vector_t basis_t;
+      //typedef typename std::vector<std::size_t> basis_t;
       
       
       // allocator for symbol
@@ -297,10 +298,31 @@ namespace molemind { namespace sdm {
             (*this)[i] ^= v[i];
           }
         }
+
+        // bit twiddling utilities
         
-        
+        template<typename C>
+        inline void whitebits(const C& v) {
+          // half
+          typename C::size_type h = v.size();
+          // clear          
+          for (auto it = v.begin(); it < v.begin() + h; ++it) {
+            typename C::value_type r = *it; 
+            std::size_t i = r / (sizeof(VectorElementType) * CHAR_BITS);
+            std::size_t b = r % (sizeof(VectorElementType) * CHAR_BITS);
+            (*this)[i] &= ~(ONE << b);
+          }
+          // set
+          for (auto it = v.begin() + h; it < v.end(); ++it) {
+            typename C::value_type r = *it;
+            std::size_t i = r / (sizeof(VectorElementType) * CHAR_BITS);
+            std::size_t b = r % (sizeof(VectorElementType) * CHAR_BITS);
+            (*this)[i] |= (ONE << b);
+          }
+        }
+        /*
         // set bits from elemental vector
-        inline void whitebits(const fingerprint_t& v) {
+        inline void whitebits(const basis_t& v) {
           std::size_t h = v.size() / 2;
           // clear
           for (auto it = v.begin(); it < v.begin() + h; ++it) {
@@ -317,16 +339,17 @@ namespace molemind { namespace sdm {
             (*this)[i] |= (ONE << b);
           }
         }
-        
+
           
         // set bits from basic vector
-        inline void setbits(const fingerprint_t& v) {
+        inline void setbits(const basis_t& v) {
           for (std::size_t r: v) {
             std::size_t i = r / (sizeof(VectorElementType) * CHAR_BITS);
             std::size_t b = r % (sizeof(VectorElementType) * CHAR_BITS);
             (*this)[i] |= (ONE << b);
           }
         }
+        */
         
         // set from a vector of bit indexes
         inline void setbits(const std::vector<std::size_t>::iterator& start,
@@ -338,6 +361,7 @@ namespace molemind { namespace sdm {
             (*this)[i] |= (ONE << b);
           }
         }
+        
         
       }; // end vector
 
@@ -474,13 +498,27 @@ namespace molemind { namespace sdm {
       
       typedef typename symbol_table_t::template nth_index<0>::type symbol_by_name;
 
-      inline boost::optional<const symbol&> get_symbol_by_name(const std::string& k) {
+      inline boost::optional<const symbol&> get_symbol_by_name(const std::string& k, bool refcount=false) {
         symbol_by_name& name_idx = index->template get<0>();
         typename symbol_by_name::iterator i = name_idx.find(shared_string(k));
         if (i == name_idx.end()) return boost::none;
-        else return *i;
+        else if (refcount) {
+          index->modify(i, bump_reference());
+          return *i;
+        } else {
+          return *i;
+        }
       }
 
+      /// functor to bump reference count
+      struct bump_reference {
+        bump_reference(void) {
+        }
+        void operator() (symbol& s) {
+          s._instance++;
+        }
+      };
+        
       /// !!! experimental expose vectors directly !!!
       
       inline boost::optional<vector&> get_vector_by_name(const std::string& k) {
