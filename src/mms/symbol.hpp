@@ -18,7 +18,7 @@ namespace molemind { namespace sdm { namespace mms {
   
     // state 
     std::size_t _id;
-    std::size_t _instance;
+    unsigned int _instance;
     shared_string_t _name;
   
   private:
