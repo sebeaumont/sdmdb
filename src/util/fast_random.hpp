@@ -14,7 +14,7 @@
 #include <boost/random/uniform_int_distribution.hpp>
 
 
-namespace molemind { namespace sdm {
+namespace sdm {
 
   namespace random {
 
@@ -96,11 +96,11 @@ namespace molemind { namespace sdm {
       uniform_random _generator;
       //random_cmrrsr _cmrrsr; //= random_cmrrsr(428394849);
       //my_adapter _generator; //= my_adapter(_cmrrsr);
-      std::vector<size_t> _idx; // why not size_t?
+      std::vector<unsigned> _idx; // why not size_t?
 
     public:
      
-      index_randomizer(std::size_t n) : _state(boost::random::mt19937()),
+      index_randomizer(unsigned n) : _state(boost::random::mt19937()),
                                         _generator(uniform_random(_state)) {
         _idx.reserve(n);
         // initialize list of indexes one time
@@ -111,7 +111,7 @@ namespace molemind { namespace sdm {
       
       // generate a shuffled vector of indexes could fix/template length of this
       
-      inline std::vector<std::size_t>& shuffle(void) {
+      inline std::vector<unsigned>& shuffle(void) {
         std::random_shuffle(_idx.begin(), _idx.end(), _generator);
         return _idx;
       }
@@ -119,4 +119,4 @@ namespace molemind { namespace sdm {
     };
     
   }
-  }}
+}

@@ -2,6 +2,7 @@ Attic
 *.pyc
 *~
 build
+debug
 *build*
 xcuserdata
 *.xcuserstate

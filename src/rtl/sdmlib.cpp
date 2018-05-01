@@ -7,9 +7,11 @@
 #include "sdmlib.h"
 #include "database.hpp"
 
-using namespace molemind::sdm;
+using namespace sdm;
 
 /* the c rtl implementation */
+/* TODO: some of the logic that has evolved in here should be re-factored back into the C++ classes */
+
 
 const status_t sdm_database(const char* filename,
                             size_t size,
@@ -155,6 +157,7 @@ const status_t sdm_database_ensure_symbol(const database_t db,
 //
 // retreive a vector reference from space
 //
+/*
 const status_t sdm_space_get_vector(const space_t space,
                                     const char* symbolname,
                                     vector_t* vec) {
@@ -165,6 +168,7 @@ const status_t sdm_space_get_vector(const space_t space,
   *vec = &(*maybe_vector); // deref boost optional
   return AOK;
 }
+*/
 
 //
 // retrieve a symbol reference from space
@@ -186,6 +190,7 @@ const status_t sdm_space_get_symbol(const space_t space,
   }
 }
 
+/*
 // new && exclusive to this library...
 const status_t sdm_space_get_symbol_vector(const space_t space,
                                            const symbol_t sym,
@@ -195,6 +200,7 @@ const status_t sdm_space_get_symbol_vector(const space_t space,
   *vec = &(sp->get_symbol_vector(symbol));
   return AOK;
 }
+*/
 
 // 
 const card_t sdm_space_get_symbols(const space_t space,
@@ -205,7 +211,7 @@ const card_t sdm_space_get_symbols(const space_t space,
 }
 
 // get matching symbols with prefix
-
+/*
 const card_t sdm_space_serialize_symbols(const space_t space,
                                          const char* prefix,
                                          const card_t card_ub,
@@ -235,6 +241,7 @@ const card_t sdm_space_serialize_symbols(const space_t space,
   *tp = data;
   return data->size(); 
 }
+*/
 
 const char* sdm_buffer_data(buffer_t tp) {
   auto ss = static_cast<std::string*>(tp);
@@ -249,7 +256,7 @@ void sdm_buffer_free(buffer_t tp) {
 
 
 // get a neighbourhood of points
-
+/*
 const card_t sdm_space_get_topology(const space_t s,
                                     const vectordata_t* v,
                                     const double metric_lb,
@@ -319,7 +326,7 @@ const status_t sdm_vector_load(const vector_t v,
   vector->copy_me(vdata);
   return AOK;
 }
-
+*/
 
 // TODO
 const status_t sdm_vector_store(const vector_t v,
