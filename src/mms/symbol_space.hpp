@@ -36,12 +36,12 @@ namespace sdm {
      * source or inlined in application code; the important
      * implementation details are the types and sizes of the vectors
      * of the underlying vector space and the sparsity of the random
-     * (a.k.a. elemental) vectors
+     * (elemental) vectors
      */
 
     template <typename VectorElementType, std::size_t VectorElems, std::size_t ElementalBits, class SegmentClass>
 
-    // for a symbol_space
+    /// symbol_space - managed memory segment with multi index container for symbols
     
     class symbol_space final {
 
@@ -107,12 +107,10 @@ namespace sdm {
           hashed_unique<BOOST_MULTI_INDEX_MEMBER(symbol_t, shared_string_t, _name)>,
           ordered_unique<BOOST_MULTI_INDEX_MEMBER(symbol_t, shared_string_t, _name),
                          partial_string_comparator>,
-          random_access<> // xxx
+          random_access<>
           >, symbol_allocator_t
         > symbol_table_t;
 
-
-      
       
       ///////////////////////////////////
       // symbol_space public interface //
@@ -120,12 +118,12 @@ namespace sdm {
       
     public:
 
-      // constructor create segment for space
+      /// constructor to create managed segment for space
       
       symbol_space(const std::string& s, segment_t& m)
         : name(s), segment(m), allocator(segment.get_segment_manager()) {
         index = segment.template find_or_construct<symbol_table_t>(name.c_str())(allocator);
-     }
+      }
 
       
       // delete the rest of the gang don't ever want to copy a space -- but move?
@@ -136,16 +134,16 @@ namespace sdm {
       const symbol_space& operator=(symbol_space&&) = delete;
 
       
-      // printer symbol_space stats
+      /// printer of symbol_space stats
       
       friend std::ostream& operator<<(std::ostream& os, symbol_space& t) {
         os << t.spacename() << " #" << t.entries(); 
         return os;
       }  
      
-
+      /// public symbol type
+      
       typedef symbol_t symbol; // public face of symbol
-      typedef vector_t vector; // public face of vector
       
       /////////////////////////////////////
       /// multi index container indexes ///
@@ -159,7 +157,9 @@ namespace sdm {
         return index->insert(symbol(k.c_str(), fp, allocator));
       }
       
-      /// random access index
+      //////////////////////////
+      /// random access index //
+      //////////////////////////
       
       typedef typename symbol_table_t::template nth_index<2>::type symbol_by_index;
       
@@ -169,20 +169,6 @@ namespace sdm {
         symbol_by_index& symbols = index->template get<2>(); 
         return symbols[i]; 
       }
-
-      /// !!! expose vectors directly
-      /*
-      inline boost::optional<vector&> get_vector_by_name(const std::string& k) {
-        symbol_by_name& name_idx = index->template get<0>();
-        typename symbol_by_name::iterator it = name_idx.find(shared_string(k));
-        if (it == name_idx.end()) return boost::none;
-        // I do know what I am doing here honest! XXX
-        else {
-          auto v = it->vector();
-          return const_cast<vector&>(v);
-        }
-      }
-      */
       
       ////////////////////////////
       /// lookup symbol by name //
@@ -200,7 +186,8 @@ namespace sdm {
         return *i;
       }
 
-      /// functor to bump reference count
+      /// functor to bump reference count using index modify with const reference to symbol
+      
       struct bump_reference {
         bump_reference(void) {
         }
@@ -209,12 +196,16 @@ namespace sdm {
         }
       };
         
-      /* CAUTION: can allow callers to side-effect symbol state -- must not alter index state or memory layout */ 
+      /* CAUTION non const reference to symbol can allow callers to
+         side-effect symbol state -- must not alter index state or
+         memory layout */
+      
       inline boost::optional<symbol&> get_non_const_symbol_by_name(const std::string& k, bool refcount=false) {
         symbol_by_name& name_idx = index->template get<0>();
         typename symbol_by_name::iterator i = name_idx.find(shared_string(k));
         if (i == name_idx.end()) return boost::none;
         symbol& s = const_cast<symbol&>(*i);
+        if (refcount) s._instance++;
         return s;
       }
 
