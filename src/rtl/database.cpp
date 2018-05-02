@@ -4,6 +4,7 @@
 
 #include "database.hpp"
 
+/* TODO rationalise and make consistent this API!!! */
 
 namespace sdm {
   
@@ -11,13 +12,15 @@ namespace sdm {
 
   database::database(const std::size_t initial_size,
                      const std::size_t max_size,
-                     const std::string& mmf)
+                     const std::string& mmf,
+                     const bool compact)
     // init slots
     : inisize(initial_size),      // initial size of heap in bytes
       maxheap(max_size),          // maximum size of heap in bytes
       // construct the memory mapped segment for database
       heap(bip::open_or_create, mmf.c_str(), initial_size),
       heapimage(mmf),             // diskimage path
+      compclose(compact),           // compact heap on close?
       // initialize PRNG
       irand(random::index_randomizer(space::symbol::dimensions)) {
     
@@ -51,7 +54,7 @@ namespace sdm {
       return boost::none;
     } else {
       auto v = sp->get_non_const_symbol_by_name(vn);
-      return v->density(); //else return boost::none;
+      if (v) return  v->density(); else return boost::none;
     }
   }
   
@@ -99,10 +102,8 @@ namespace sdm {
       }
   }
   
-  
-  
-  
-  // operations
+    
+  /// learning operations
   
   ////////////////////////////////////////////////////////////
   /// superpose target vector with source

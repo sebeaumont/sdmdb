@@ -43,7 +43,8 @@ namespace sdm {
     
     explicit database(const std::size_t initial_size,
                       const std::size_t max_size,
-                      const std::string& filepath);
+                      const std::string& filepath,
+                      const bool compact=false);
 
     
     /// no copy or move semantics
@@ -179,6 +180,8 @@ namespace sdm {
     std::size_t maxheap;
     segment_t heap;
     const std::string heapimage;
+    const bool compclose; // compact on close?
+    
     // read through cache
     std::map<const std::string, space*> spaces; // used space cache
     // randomizer
