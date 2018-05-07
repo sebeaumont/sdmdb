@@ -80,7 +80,7 @@ int main(int argc, const char** argv) {
   
   
   namespace po = boost::program_options;
-  using namespace molemind::sdm;
+  using namespace sdm;
   
   // announce
   string banner = "SDM frametrainer - Copyright (c) 2012-2018 Simon Beaumont - All Rights Reserved.\nSee: LICENCE for terms and conditions.";

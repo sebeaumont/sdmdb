@@ -14,6 +14,18 @@
 
 #define SDM_VECTOR_PAYLOAD_SIZE sizeof(SDM_VECTOR_ELEMENT_TYPE)*SDM_VECTOR_ELEMS
 
+/* XXX */
+#define VELEMENT_64 1
+
+#ifdef VELEMENT_64
+#define ONE 1ULL
+#else
+#define ONE 1U
+#endif
+#define CHAR_BITS (8)
+
+#define CHAR_BITS (8)
+
 /* #include <stdlib.h> language-c cant grok modern c!  so we are forced
    into this hack as we would normally take platform defaults from stdlib. */
 #ifndef size_t

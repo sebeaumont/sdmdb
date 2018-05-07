@@ -20,7 +20,7 @@
 // we are really developing this
 #include "../rtl/database.hpp"
 // and this temporary vectors
-#include "../mms/ephemeral_vector.hpp"
+//#include "../mms/ephemeral_vector.hpp"
 
 
 // wall clock timer
@@ -81,20 +81,10 @@ inline bool file_exists(std::string& path) {
 }
 
 
-using namespace molemind::sdm;
+using namespace sdm;
 
 // how to subvert our encapsulation with leaky abstractions... ;-)
 // and test the evolving API...
-
-static inline boost::optional<database::space::vector&> get_vector(database& db,
-                                                                   const std::string& space_name,
-                                                                   const std::string& name) {
-  auto space = db.get_space_by_name(space_name);
-  if (space)
-    return space->get_vector_by_name(name);
-  else
-    return boost::none;
-}
 
 static inline boost::optional<const database::space::symbol&> get_symbol(database& db,
                                                                          const std::string& space_name,
@@ -102,6 +92,16 @@ static inline boost::optional<const database::space::symbol&> get_symbol(databas
   auto space = db.get_space_by_name(space_name);
   if (space)
     return space->get_symbol_by_name(name);
+  else
+    return boost::none;
+}
+
+static inline boost::optional<database::space::symbol&> get_nc_symbol(database& db,
+                                                                      const std::string& space_name,
+                                                                      const std::string& name) {
+  auto space = db.get_space_by_name(space_name);
+  if (space)
+    return space->get_non_const_symbol_by_name(name);
   else
     return boost::none;
 }
@@ -114,7 +114,7 @@ static inline boost::optional<const database::space::symbol&> get_symbol(databas
 int main(int argc, const char** argv) {
 
   namespace po = boost::program_options;
-  using namespace molemind::sdm;
+  using namespace sdm;
   
   // command line options
     
@@ -167,7 +167,7 @@ int main(int argc, const char** argv) {
   // main command loop
 
   // what should this interface be called really?
-  database::space::ephemeral_vector_t local_vector;
+  //database::space::ephemeral_vector_t local_vector;
   
   std::string prompt("Ψ> ");
   std::string input;
@@ -225,60 +225,62 @@ int main(int argc, const char** argv) {
         
       } else if (boost::iequals(cv[0], "-")) {
         // array access to space
-        boost::optional<database::space::vector&> v = get_vector(rts, default_spacename, cv[1]);
         // xxx
+        /*
+        boost::optional<database::space::vector&> v = get_vector(rts, default_spacename, cv[1]);
         if (v) {
           database::space::ephemeral_vector_t myvector(*v);
           
           std::cout << v->count() << " " << myvector.distance(*v) << std::endl;
-        }
+          } */
       } else if (boost::iequals(cv[0], "+")) {
         rts.superpose(default_spacename, cv[1], default_spacename, cv[2]);
-        boost::optional<database::space::vector&> v = get_vector(rts, default_spacename, cv[1]);
+        boost::optional<database::space::symbol&> v = get_nc_symbol(rts, default_spacename, cv[1]);
         std::cout << v->count() << std::endl;
 
       } else if (boost::iequals(cv[0], "/")) {
         rts.superpose(default_spacename, cv[1], default_spacename, cv[2], true);
-        boost::optional<const database::space::symbol&> s = get_symbol(rts, default_spacename, cv[2]);
+        boost::optional<database::space::symbol&> s = get_nc_symbol(rts, default_spacename, cv[2]);
         std::cout << s << std::endl;
         
       } else if (boost::iequals(cv[0], "?")) {
         //rts.superpose(default_spacename, cv[1], default_spacename, cv[2]);
-        boost::optional<database::space::vector&> v = get_vector(rts, default_spacename, cv[1]);
-        boost::optional<database::space::vector&> u = get_vector(rts, default_spacename, cv[2]);
+        boost::optional<database::space::symbol&> v = get_nc_symbol(rts, default_spacename, cv[1]);
+        boost::optional<database::space::symbol&> u = get_nc_symbol(rts, default_spacename, cv[2]);
         // optional guards? tee hee
         std::cout << v->similarity(*u) << std::endl;
         
       } else if (boost::iequals(cv[0], ".")) {
         //rts.superpose(default_spacename, cv[1], default_spacename, cv[2]);
-        boost::optional<database::space::vector&> v = get_vector(rts, default_spacename, cv[1]);
-        boost::optional<database::space::vector&> u = get_vector(rts, default_spacename, cv[2]);
+        boost::optional<database::space::symbol&> v = get_nc_symbol(rts, default_spacename, cv[1]);
+        boost::optional<database::space::symbol&> u = get_nc_symbol(rts, default_spacename, cv[2]);
         // optional guards? tee hee
         std::cout << v->inner(*u) << std::endl;
         
       } else if (boost::iequals(cv[0], "!")) {
         // randomize the vector...
-        boost::optional<database::space::vector&> v = get_vector(rts, default_spacename, cv[1]);
-        rts.randomize_vector(v, 0.001);
+        boost::optional<database::space::symbol&> v = get_nc_symbol(rts, default_spacename, cv[1]);
+        //rts.randomize_vector(v, 0.001);
         std::cout << v->count() << std::endl;
       
       } else if (boost::iequals(cv[0], "%")) {
         // topo
         //boost::optional<database::space::vector&> v = get_vector(rts, default_spacename, cv[1]);
+        /*
         boost::optional<sdm::topology> t = rts.neighbourhood(default_spacename, default_spacename, cv[1], 0, 1, 20);
         if (t) for (auto p : *t)
           std::cout << p << std::endl;
-
+        */
        
       } else if (boost::iequals(cv[0], "1")) {
         // randomize the vector...
-        boost::optional<database::space::vector&> v = get_vector(rts, default_spacename, cv[1]);
+        boost::optional<database::space::symbol&> v = get_nc_symbol(rts, default_spacename, cv[1]);
         v->ones();
         std::cout << v->count() << std::endl;
 
       } else if (boost::iequals(cv[0], "0")) {
         // randomize the vector...
-        boost::optional<database::space::vector&> v = get_vector(rts, default_spacename, cv[1]);
+        boost::optional<database::space::symbol&> v = get_nc_symbol(rts, default_spacename, cv[1]);
         v->zeros();
         std::cout << v->count() << std::endl;
 

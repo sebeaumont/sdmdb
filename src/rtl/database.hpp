@@ -9,16 +9,15 @@
 #include "../mms/symbol_space.hpp"
 #include "../util/fast_random.hpp"
 
-#include "topology.hpp"
+//#include "topology.hpp"
 #include "sdmconfig.h"
 #include "sdmstatus.h"
 
 #include <iostream>
 
-namespace molemind { namespace sdm {
+namespace sdm {
 
   namespace bip = boost::interprocess;
-  using namespace molemind;
   
   /***********************************************************************
    ** Database type provides the API for the SDM implementation
@@ -44,7 +43,8 @@ namespace molemind { namespace sdm {
     
     explicit database(const std::size_t initial_size,
                       const std::size_t max_size,
-                      const std::string& filepath);
+                      const std::string& filepath,
+                      const bool compact=false);
 
     
     /// no copy or move semantics
@@ -112,7 +112,7 @@ namespace molemind { namespace sdm {
     boost::optional<double> inner(const std::string&, const std::string&,
                                   const std::string&, const std::string&) noexcept;
 
-    
+    /*
     /// toplogy of n nearest neighbours satisfying p, d constraints
     boost::optional<topology> neighbourhood(const std::string& target_space,
                                             const std::string& source_space,
@@ -124,6 +124,7 @@ namespace molemind { namespace sdm {
     
     /// TODO query algebra
     
+    */
     
     ////////////////////////
     /// space operations ///
@@ -156,22 +157,9 @@ namespace molemind { namespace sdm {
     boost::optional<const space::symbol&> get_symbol(const std::string& space_name, const std::string& symbol_name) noexcept;
 
     /// get named vector
-    boost::optional<space::vector&> get_vector(const std::string& space_name, const std::string& vector_name) noexcept;
+    //boost::optional<space::vector&> get_vector(const std::string& space_name, const std::string& vector_name) noexcept;
 
-    /// TODO add a list of vectors
-
-    /* not sure we should provide these */
-    /// randomise a vector 
-    
-    void randomize_vector(boost::optional<space::vector&> vector, double p) noexcept;
-
-    /// ones
-    void unit_vector(boost::optional<space::vector&> v) noexcept;
-    
-    /// zeros
-    void zero_vector(boost::optional<space::vector&> v) noexcept;
-
-    // get space
+      // get space
     space* get_space_by_name(const std::string&); 
 
     /// database memoizes pointers to named spaces to optimize symbol resolution 
@@ -192,10 +180,12 @@ namespace molemind { namespace sdm {
     std::size_t maxheap;
     segment_t heap;
     const std::string heapimage;
+    const bool compclose; // compact on close?
+    
     // read through cache
     std::map<const std::string, space*> spaces; // used space cache
     // randomizer
     random::index_randomizer irand;
  
   };
-  }}
+}

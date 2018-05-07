@@ -22,7 +22,7 @@ const std::string heapfile = "vpsace-0.img";
 const std::string v0 = "vector-0";
 
 typedef bip::managed_mapped_file segment_t;
-typedef molemind::sdm::mms::symbol_space<unsigned long, 256, 16, segment_t> space_t;
+typedef sdm::mms::symbol_space<unsigned long, 256, 16, segment_t> space_t;
 
 //int main(int argc, char** argv) {
 
@@ -53,7 +53,7 @@ BOOST_FIXTURE_TEST_SUITE(mms_0, test_setup)
 
 
 BOOST_AUTO_TEST_CASE(insert_vector) {
-  std::vector<std::size_t> basis; // XXX test this too! now
+  std::vector<unsigned> basis; // XXX test this too! now
   basis.push_back(12);
   basis.push_back(43);
   basis.push_back(99);

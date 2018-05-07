@@ -9,7 +9,7 @@
 
 #include "rtl/database.hpp"
 
-using namespace molemind::sdm;
+using namespace sdm;
 
 // sizing
 const std::size_t ini_size = 700 * 1024 * 1024;
