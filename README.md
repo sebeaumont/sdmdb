@@ -1,9 +1,17 @@
 SDMLIB - Sparse Distributed Memory Database 
 ===========================================
 
-The main artefact is the sdm runtime library which offers a high
-performance sparse distributed memory or semantic vector database
-targeted at a number of platforms.
+Unreleased Apha version -- Planned Public Release Milestone July 2018
+
+I am currently refactoring the architecture of the API and library
+into two parts, the database and the query engine. This is to allow a
+more compact and flexible training/learning implementation and to use
+GPU or dedicated hardware implmentation for the metric space/topology
+or search egnine.
+
+The main artefact of the project is the sdm runtime library which
+offers a high performance sparse distributed memory or semantic vector
+database targeted at a number of platforms.
 
 The sdm library is currently written in C++ making extensive use of
 boost multiprocessing template library to provide memory management
@@ -14,10 +22,14 @@ The application is high performance associative memory to further
 research and development of the capabilities of a general model of
 hyper-dimensional sparse space. This model has been extensively
 applied to and indeed was incubated in the domain of data/text
-mining.
+mining particularly word level embeddings.
 
 There is a c library under active development currently driven
 by the need for a foreign function interface for client languages.
+This currently supercedes the c++ library classes and may end up as
+the only API. Tho' is seems a shame to miss out on integrations using
+say boost python or other clever and efficient FFI bindings.
+
 
 
 Building 
