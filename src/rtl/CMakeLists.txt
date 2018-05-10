@@ -1,4 +1,7 @@
-# build c shared library
+#########################
+# build shared libraries
+#########################
+
 include_directories(..)
 
 # header only boost
@@ -9,14 +12,23 @@ include_directories (${Boost_INCLUDE_DIR})
 find_package(Cereal REQUIRED)
 include_directories (${Cereal_INCLUDE_DIRS})
 
-# c++ and c libraries
+
+# c library: cshim + database
 add_library(sdm SHARED sdmlib.cpp database.cpp)
 
 set_target_properties(sdm PROPERTIES
   VERSION ${SDM_VERSION_MAJOR}.${SDM_VERSION_MINOR}
   SOVERSION ${SDM_VERSION_MAJOR})
 
+# C++ library -- database only
+add_library(sdmdb SHARED database.cpp)
+
+set_target_properties(sdmdb PROPERTIES
+  VERSION ${SDM_VERSION_MAJOR}.${SDM_VERSION_MINOR}
+  SOVERSION ${SDM_VERSION_MAJOR})
+
 
 # install lib and headers
 install (TARGETS sdm LIBRARY DESTINATION lib)
+install (TARGETS sdmdb LIBRARY DESTINATION lib)
 install (FILES sdmlib.h sdmconfig.h sdmstatus.h DESTINATION include)

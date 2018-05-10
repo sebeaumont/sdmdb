@@ -47,12 +47,14 @@ namespace sdm {
   
   /// vector density
   
-  boost::optional<const double> database::density(const std::string& sn,
-                                                  const std::string& vn) noexcept {
+  boost::optional<const double>
+  database::density(const std::string& sn,
+                    const std::string& vn) noexcept {
     auto sp = get_space_by_name(sn);
     if (sp == nullptr) {
       return boost::none;
     } else {
+      // non_const as density() function cannot be marked const!
       auto v = sp->get_non_const_symbol_by_name(vn);
       if (v) return  v->density(); else return boost::none;
     }
@@ -61,8 +63,9 @@ namespace sdm {
   
   /// find symbols by prefix
   
-  boost::optional<database::symbol_list> database::prefix_search(const std::string& sn,
-                                                                 const std::string& vp) noexcept {
+  boost::optional<database::symbol_list>
+  database::prefix_search(const std::string& sn,
+                          const std::string& vp) noexcept {
     auto sp = get_space_by_name(sn);
     if (sp) return sp->search(vp);
     else return boost::none;
@@ -75,7 +78,9 @@ namespace sdm {
   /// N.B. can cause memory outage and may side-effect
   /// the creation of a space and a symbol+vector within it
   
-  status_t database::ensure_symbol(const std::string& sn, const std::string& vn) noexcept {
+  status_t
+  database::ensure_symbol(const std::string& sn,
+                          const std::string& vn) noexcept {
     // may create a space
     auto space = ensure_space_by_name(sn);
     if (!space) return ERUNTIME;
@@ -102,20 +107,25 @@ namespace sdm {
       }
   }
   
-    
-  /// learning operations
+
+  //////////////////////////////////////
+  /// learning/transactional operations
+  //////////////////////////////////////
   
-  ////////////////////////////////////////////////////////////
+  ////////////////////////////////////////
   /// superpose target vector with source
   ///
-  /// may side effect creation of spaces and symbols as a convenience
-  /// for realtime training
+  
+  // N.B. may side effect creation of spaces and symbols as a convenience
+  // for realtime training and thus cause memory outage which may incur
+  // database growth if possbile (or indeed may fail) TODO exception handling
+  // and attempt growth on bad_alloc
   
   status_t database::superpose(const std::string& ts,
                                const std::string& tn,
                                const std::string& ss,
                                const std::string& sn,
-                               const bool newbasis)  {
+                               const bool newbasis) noexcept {
     
     // assume all symbols are present
     status_t state = AOLD;
@@ -127,7 +137,7 @@ namespace sdm {
     if (!source_sp) return ERUNTIME;
     
     
-    // get source symbol
+    // get source symbol and optionally generate a new version or basis
     boost::optional<const space::symbol&> s = source_sp->get_symbol_by_name(sn, newbasis);
     if (!s) {
       // TODO guard: if p.second else ...
@@ -136,7 +146,7 @@ namespace sdm {
       // TODO: what about p.first then? instead of this
       s = source_sp->get_symbol_by_name(sn);
       if (!s) return ERUNTIME;
-      state = ANEW;
+      state = ANEW; // => a symbol wss created possbily within a new space.
     }
     
     // get target symbol
@@ -151,71 +161,49 @@ namespace sdm {
       space::inserted_t p = target_sp->insert(tn, irand.shuffle());
       if (!p.second) return ERUNTIME;
       t = target_sp->get_non_const_symbol_by_name(tn);
-      //if (!t) return ERUNTIME;
-      state = ANEW;
+      if (!t) return ERUNTIME;
+      state = ANEW; // => a symbol wss created possbily within a new space.
     }
 
-    // do the job!
+    // do the update to the target symbol
     t->superpose(*s);
     return state;
   }
+
+  /// remove source from target
   
+  status_t
+  database::subtract(const std::string& tvs, 
+                    const std::string& tvn,
+                    const std::string& svs,
+                    const std::string& svn) noexcept {
+    // tricky -- which instance (or all) do you want to substract if source vector
+    // it e.g. white
+    return EUNIMPLEMENTED;
+  }
+
   
+  // TODO ad-hoc comparison and vector properties
   
-  /// measurement
-  
-  boost::optional<double> database::similarity(const std::string& snv,
-                                               const std::string& vn,
-                                               const std::string& snu,
-                                               const std::string& un) noexcept {
+  boost::optional<double>
+  database::similarity(const std::string& snv,
+                       const std::string& vn,
+                       const std::string& snu,
+                       const std::string& un) noexcept {
     // TODO
     return 0.0;
   }
-  
-  /*
-  // neighbourhood -- will be part of new topology engine
-  boost::optional<sdm::topology> database::neighbourhood(const::std::string& ts,
-                                                           const std::string& ss,
-                                                           const std::string& sv,
-                                                           double p,
-                                                           double d,
-                                                           std::size_t n) noexcept {
-      // all parts must exist
-      auto t = get_space_by_name(ts);
-      if (t) {
-        auto s = get_space_by_name(ss);
-        if (s) {
-          boost::optional<space::vector&> v = s->get_vector_by_name(sv);
-          if (v) return t->neighbourhood(*v, p, d, n); // should be no optionals at space level?
-          else return boost::none;
-        } else return boost::none;
-      } else return boost::none;
-    }
-    
 
-    // init symbol --- needs randomizer
-    
-    // low level randomize a vector -- writes p * d random bits
-    
-    void database::randomize_vector(boost::optional<space::vector&> v, double p) noexcept {
-      if (v) {
-        std::size_t n = floor(p * space::vector::dimensions);
-        std::vector<std::size_t>& ilist = irand.shuffle();
-        v->setbits(ilist.begin(), ilist.begin() + n);
-      }
-    }
-    
-    
-    void database::unit_vector(boost::optional<space::vector&> v) noexcept {
-      if (v) v->ones();
-    }
-      
-    void database::zero_vector(boost::optional<space::vector&> v) noexcept {
-      if (v) v->zeros();
-    }
-    */
-    
-    
+  boost::optional<double>
+  database::overlap(const std::string& snv,
+                    const std::string& vn,
+                    const std::string& snu,
+                    const std::string& un) noexcept {
+    // TODO
+    return 0.0;
+  }
+
+  
   //////////////////////
   /// space management
   //////////////////////

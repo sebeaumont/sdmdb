@@ -6,6 +6,7 @@
 #include <boost/optional.hpp>
 #include <map>
 
+
 #include "../mms/symbol_space.hpp"
 #include "../util/fast_random.hpp"
 
@@ -36,7 +37,10 @@ namespace sdm {
 
     /// type of space implementation determines the type and number of elements and sparsity
     
-    typedef mms::symbol_space<SDM_VECTOR_ELEMENT_TYPE, SDM_VECTOR_ELEMS, SDM_VECTOR_BASIS_SIZE, segment_t> space;
+    typedef mms::symbol_space<SDM_VECTOR_ELEMENT_TYPE,
+                              SDM_VECTOR_ELEMS,
+                              SDM_VECTOR_BASIS_SIZE,
+                              segment_t> space;
     
     
     /// constructor to initialize file mapped heap
@@ -59,15 +63,12 @@ namespace sdm {
     
     ~database();
 
-    /// create new symbol
-    
-    status_t ensure_symbol(const std::string& space_name, const std::string& symbol_name) noexcept;
-
     /// search for symbols starting with prefix
     typedef std::pair<database::space::symbol_iterator, database::space::symbol_iterator> symbol_list;
     
-    boost::optional<symbol_list> prefix_search(const std::string& space_name,
-                                               const std::string& symbol_prefix) noexcept;
+    boost::optional<symbol_list>
+    prefix_search(const std::string& space_name,
+                  const std::string& symbol_prefix) noexcept;
     
     
     /////////////////////////
@@ -75,29 +76,34 @@ namespace sdm {
     /////////////////////////
     
     /// get vector density
-    boost::optional<const double> density(const std::string& space_name, const std::string& vector_name) noexcept;
+    boost::optional<const double>
+    density(const std::string& space_name,
+            const std::string& vector_name) noexcept;
 
 
     /////////////////////////////////////////////////////
     /// effectful learning operations on target vectors
     /////////////////////////////////////////////////////
+
+    
+    /// lookup or create new symbol
+    
+    status_t
+    ensure_symbol(const std::string& space_name,
+                  const std::string& symbol_name) noexcept;
+
     
     /// add or superpose
-    status_t superpose(const std::string& ts, const std::string& tn,
-                       const std::string& ss, const std::string& sn,
-                       const bool newbasis = false);
+    status_t
+    superpose(const std::string& ts, const std::string& tn,
+              const std::string& ss, const std::string& sn,
+              const bool newbasis = false) noexcept;
   
     /// subtract
-    status_t subtract(const std::string& ts, const std::string& tn,
-                      const std::string& ss, const std::string& sn) noexcept;
+    status_t
+    subtract(const std::string& ts, const std::string& tn,
+             const std::string& ss, const std::string& sn) noexcept;
     
-    /// multiply
-    status_t multiply(const std::string& ts, const std::string& tn,
-                      const std::string& ss, const std::string& sn) noexcept;
-    
-    /// TODO exponents
-    
-    /// TODO shifts and other permutations of bases
     
     
     ////////////////////////
@@ -105,38 +111,48 @@ namespace sdm {
     ////////////////////////
     
     /// simlilarity (unit distance)
-    boost::optional<double> similarity(const std::string&, const std::string&,
-                                       const std::string&, const std::string&) noexcept;
+    boost::optional<double>
+    similarity(const std::string&, const std::string&,
+               const std::string&, const std::string&) noexcept;
 
-    /// inner product
-    boost::optional<double> inner(const std::string&, const std::string&,
-                                  const std::string&, const std::string&) noexcept;
+    /// inner product (overlap)
+    boost::optional<double>
+    overlap(const std::string&, const std::string&,
+            const std::string&, const std::string&) noexcept;
 
-    /*
-    /// toplogy of n nearest neighbours satisfying p, d constraints
-    boost::optional<topology> neighbourhood(const std::string& target_space,
-                                            const std::string& source_space,
-                                            const std::string& source_name,
-                                            double similarity_lower_bound,
-                                            double density_upper_bound,
-                                            std::size_t cardinality_upper_bound) noexcept;
-    /// TODO negation
-    
-    /// TODO query algebra
-    
-    */
     
     ////////////////////////
     /// space operations ///
     ////////////////////////
     
-    bool destroy_space(const std::string&) noexcept;
+    bool
+    destroy_space(const std::string&) noexcept;
 
-    std::vector<std::string> get_named_spaces() noexcept;
+    std::vector<std::string>
+    get_named_spaces() noexcept;
     
-    boost::optional<std::size_t> get_space_cardinality(const std::string&) noexcept;
-   
-  
+    boost::optional<std::size_t>
+    get_space_cardinality(const std::string&) noexcept;
+
+    ///////////////////
+    /// heap metrics //
+    ///////////////////
+    
+    inline std::size_t heap_size() noexcept { return heap.get_size(); }
+    inline std::size_t free_heap() noexcept { return heap.get_free_memory(); }
+    inline bool check_heap_sanity() noexcept { return heap.check_sanity(); }
+    inline bool can_grow_heap() noexcept { return (heap.get_size() < maxheap); }
+
+  protected:
+    
+    /// get named symbol
+    boost::optional<const space::symbol&>
+    get_symbol(const std::string& space_name,
+               const std::string& symbol_name) noexcept;
+
+    
+  private:
+    
     //////////////////////
     /// heap utilities ///
     //////////////////////
@@ -145,27 +161,14 @@ namespace sdm {
     
     bool compactify_heap() noexcept;
     
-    /// heap metrics
     
-    inline std::size_t heap_size() noexcept { return heap.get_size(); }
-    inline std::size_t free_heap() noexcept { return heap.get_free_memory(); }
-    inline bool check_heap_sanity() noexcept { return heap.check_sanity(); }
-    inline bool can_grow_heap() noexcept { return (heap.get_size() < maxheap); }
-    
-    
-    /// get named symbol
-    boost::optional<const space::symbol&> get_symbol(const std::string& space_name, const std::string& symbol_name) noexcept;
-
-    /// get named vector
-    //boost::optional<space::vector&> get_vector(const std::string& space_name, const std::string& vector_name) noexcept;
-
       // get space
     space* get_space_by_name(const std::string&); 
 
     /// database memoizes pointers to named spaces to optimize symbol resolution 
     space* ensure_space_by_name(const std::string&); 
     
-    // get randomizer for fun and profit...
+    // get randomizer
     inline random::index_randomizer& randomidx(void) { return irand; }
 
     
@@ -175,17 +178,20 @@ namespace sdm {
     // lifetime state //
     ////////////////////
 
-    // constructed
+    // db parameters
     std::size_t inisize;
     std::size_t maxheap;
     segment_t heap;
     const std::string heapimage;
-    const bool compclose; // compact on close?
+    const bool compclose;      // compact on close?
     
-    // read through cache
-    std::map<const std::string, space*> spaces; // used space cache
-    // randomizer
+    // randomizer init at construction
     random::index_randomizer irand;
+
+    // are we trying to grow?
+    volatile bool isexpanding; 
+    // read through space cache
+    std::map<const std::string, space*> spaces; // used space cache
  
   };
 }

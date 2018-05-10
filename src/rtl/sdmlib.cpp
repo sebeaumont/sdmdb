@@ -32,6 +32,7 @@ const status_t sdm_database_close(const database_t db) {
   return AOK;
 }
 
+/*
 const status_t sdm_database_get_space(const database_t db,
                                       const char* spacename,
                                       space_t* space) {
@@ -57,7 +58,7 @@ const status_t sdm_database_ensure_space(const database_t db,
     return (const status_t) -errno;
   }
 }
-
+*/
 
 const status_t sdm_database_superpose(const database_t db,
                                       const char* target_spacename,
@@ -73,7 +74,7 @@ const status_t sdm_database_superpose(const database_t db,
                                                (bool) newbasis);
 }
 
-
+/*
 const status_t sdm_database_ensure_space_symbol(const database_t db,
                                                 const char* spacename,
                                                 const char* symbolname,
@@ -153,6 +154,7 @@ const status_t sdm_database_ensure_symbol(const database_t db,
     return ERUNTIME;
   }
 }
+*/
 
 //
 // retreive a vector reference from space
@@ -169,7 +171,7 @@ const status_t sdm_space_get_vector(const space_t space,
   return AOK;
 }
 */
-
+/*
 //
 // retrieve a symbol reference from space
 //
@@ -189,6 +191,7 @@ const status_t sdm_space_get_symbol(const space_t space,
     return ESYMBOL;
   }
 }
+*/
 
 /*
 // new && exclusive to this library...

@@ -153,8 +153,11 @@ namespace sdm {
       
       /// attempt to insert symbol into space
       
-      inline inserted_t insert(const std::string& k, const std::vector<unsigned>& fp) {
-        return index->insert(symbol(k.c_str(), fp, allocator));
+      inline inserted_t
+      insert(const std::string& k,
+             const std::vector<unsigned>& fp,
+             const typename symbol::type ty = symbol::type::normal) {
+        return index->insert(symbol(k.c_str(), fp, allocator, ty));
       }
       
       //////////////////////////
@@ -176,7 +179,8 @@ namespace sdm {
       
       typedef typename symbol_table_t::template nth_index<0>::type symbol_by_name;
 
-      inline boost::optional<const symbol&> get_symbol_by_name(const std::string& k, bool refcount=false) {
+      inline boost::optional<const symbol&>
+      get_symbol_by_name(const std::string& k, bool refcount=false) {
         symbol_by_name& name_idx = index->template get<0>();
         typename symbol_by_name::iterator i = name_idx.find(shared_string(k));
         if (i == name_idx.end()) return boost::none;
@@ -200,7 +204,8 @@ namespace sdm {
          side-effect symbol state -- must not alter index state or
          memory layout */
       
-      inline boost::optional<symbol&> get_non_const_symbol_by_name(const std::string& k, bool refcount=false) {
+      inline boost::optional<symbol&>
+      get_non_const_symbol_by_name(const std::string& k, bool refcount=false) {
         symbol_by_name& name_idx = index->template get<0>();
         typename symbol_by_name::iterator i = name_idx.find(shared_string(k));
         if (i == name_idx.end()) return boost::none;
@@ -216,7 +221,8 @@ namespace sdm {
       typedef typename symbol_table_t::template nth_index<1>::type symbol_by_prefix;  
       typedef typename symbol_by_prefix::iterator symbol_iterator;
 
-      inline std::pair<symbol_iterator, symbol_iterator> search(const std::string& k) {
+      inline std::pair<symbol_iterator, symbol_iterator>
+      search(const std::string& k) {
         symbol_by_prefix& name_idx = index->template get<1>();
         return name_idx.equal_range(partial_string(shared_string(k)));
       }
