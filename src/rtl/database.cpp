@@ -242,14 +242,56 @@ namespace sdm {
   }
 
   
+  //////////////////////
+  // space management //
+  //////////////////////
+  
+  /// destroy space permanently
+  
+  bool
+  database::destroy_space(const std::string& name) noexcept {
+    return heap.destroy<space>(name.c_str());
+  }
+  
+  /// lookup all spaces in the heap/segment manager
+  
+  std::vector<std::string>
+  database::get_named_spaces() noexcept {
+    std::vector<std::string> names;
+    
+    typedef segment_t::const_named_iterator const_named_it;
+    const_named_it named_beg = heap.named_begin();
+    const_named_it named_end = heap.named_end();
+    
+    for(; named_beg != named_end; ++named_beg){
+      const segment_t::char_type *name = named_beg->name();
+      std::size_t name_len = named_beg->name_length();
+      if (name[0] != '_')
+        names.push_back(std::string(name, name_len));
+      // constant void pointer to the named object
+      //const void *value = named_beg->value();
+    }
+    return names;
+  }
+
+  /// return cardinality of a space
+    
+  boost::optional<std::size_t>
+  database::get_space_cardinality(const std::string& sn) noexcept {
+    auto sp = get_space_by_name(sn);
+    if (sp) return sp->entries();
+    else return boost::none;
+  }
+  
+
   //////////////////////////////////////////
   /// inline private or protected utilities
   //////////////////////////////////////////
   
   inline status_t
   database::ensure_mutable_symbol(const std::string& spacename,
-                        const std::string& name,
-                        const space::symbol::type type) {
+                                  const std::string& name,
+                                  const space::symbol::type type) {
     
     space* sp = ensure_space_by_name(spacename);
 
@@ -264,8 +306,8 @@ namespace sdm {
   
   inline status_t 
   database::ensure_symbol(const std::string& spacename,
-                const std::string& name,
-                const space::symbol::type type) {
+                          const std::string& name,
+                          const space::symbol::type type) {
 
     space* sp = ensure_space_by_name(spacename);
 
@@ -276,11 +318,6 @@ namespace sdm {
       return AOK;
   }
 
-  
-  //////////////////////
-  // space management //
-  //////////////////////
-  
   // create and manage named symbols by name -- space constructor does find_or_construct on segment
   // then database memoizes pointers to spaces to speed up symbol resolution
   
@@ -318,7 +355,7 @@ namespace sdm {
     }
   */
   
-  // this is meant to be fast so no optional's here -- we could inline this.
+  // this is meant to be fast so no optional's here
   inline database::space*
   database::get_space_by_name(const std::string& name) {
     auto it = spaces.find(name);
@@ -327,41 +364,8 @@ namespace sdm {
     else
       return it->second;
     }
-  
-  // destroy space permanently
-  
-  bool database::destroy_space(const std::string& name) noexcept {
-    return heap.destroy<space>(name.c_str());
-  }
-  
-  // lookup all spaces in the heap/segment manager
-  
-  std::vector<std::string> database::get_named_spaces() noexcept {
-    std::vector<std::string> names;
-    
-    typedef segment_t::const_named_iterator const_named_it;
-    const_named_it named_beg = heap.named_begin();
-    const_named_it named_end = heap.named_end();
-    
-    for(; named_beg != named_end; ++named_beg){
-      const segment_t::char_type *name = named_beg->name();
-      std::size_t name_len = named_beg->name_length();
-      if (name[0] != '_')
-        names.push_back(std::string(name, name_len));
-      // constant void pointer to the named object
-      //const void *value = named_beg->value();
-    }
-    return names;
-  }
-    
-    
-  boost::optional<std::size_t> database::get_space_cardinality(const std::string& sn) noexcept {
-    auto sp = get_space_by_name(sn);
-    if (sp) return sp->entries();
-    else return boost::none;
-  }
-  
-  ////////////////////////
+
+   ////////////////////////
   // gc, heap management
   ////////////////////////
     
