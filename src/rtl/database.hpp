@@ -64,7 +64,8 @@ namespace sdm {
     ~database();
 
     /// search for symbols starting with prefix
-    typedef std::pair<database::space::symbol_iterator, database::space::symbol_iterator> symbol_list;
+    typedef std::pair<database::space::symbol_iterator,
+                      database::space::symbol_iterator> symbol_list;
     
     boost::optional<symbol_list>
     prefix_search(const std::string& space_name,
@@ -94,12 +95,21 @@ namespace sdm {
 
     
     /// add or superpose
+    
     status_t
     superpose(const std::string& ts, const std::string& tn,
               const std::string& ss, const std::string& sn,
               const bool newbasis = false) noexcept;
-  
+
+    /// batch superpose several symbols from source space
+
+    status_t
+    superpose(const std::string& ts, const std::string& tn,
+              const std::string& ss, const std::vector<std::string>& sns,
+              const bool newbasis = false) noexcept;
+    
     /// subtract
+
     status_t
     subtract(const std::string& ts, const std::string& tn,
              const std::string& ss, const std::string& sn) noexcept;
@@ -145,8 +155,8 @@ namespace sdm {
 
   protected:
     
-    /// get named symbol
-    boost::optional<const space::symbol&>
+    /// get named symbol (non-const)
+    boost::optional<space::symbol&>
     get_symbol(const std::string& space_name,
                const std::string& symbol_name) noexcept;
 

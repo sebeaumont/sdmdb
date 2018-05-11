@@ -218,26 +218,32 @@ namespace sdm {
         }
       }
 
-
-      // remove elemental bits
+      ///////////////////////////////////////////////////////////////////////////
+      // remove elemental bits of all instances 
+      // XXX TODO we could select a set of instance indexes and default to this
+      
       inline void subtract(const symbol&v) {
+        // we must subtract all bases of source vector
         if (v._type == white) {
           unsigned h = v._basis.size() / 2;
-          // clear top 1/2
-          for (auto it = v._basis.begin() + h; it < v._basis.end(); ++it) {
-            unsigned r = (*it + v._instance) % dimensions;
-            unsigned i = r / (sizeof(element_t) * CHAR_BITS);
-            unsigned b = r % (sizeof(element_t) * CHAR_BITS);
-            _vector[i] &= ~(ONE << b);
-          } 
-          
+          for (unsigned ins = 0; ins < v._instance; ++ins) {
+            // clear top 1/2
+            for (auto it = v._basis.begin() + h; it < v._basis.end(); ++it) {
+              unsigned r = (*it + ins) % dimensions;
+              unsigned i = r / (sizeof(element_t) * CHAR_BITS);
+              unsigned b = r % (sizeof(element_t) * CHAR_BITS);
+              _vector[i] &= ~(ONE << b);
+            }
+          }
         } else {
-          // clear all
-          for (auto it = v._basis.begin(); it < v._basis.end(); ++it) {
-            unsigned r = (*it + v._instance) % dimensions;
-            unsigned i = r / (sizeof(element_t) * CHAR_BITS);
-            unsigned b = r % (sizeof(element_t) * CHAR_BITS);
-            _vector[i] &= ~(ONE << b);
+          // clear all instances
+          for (unsigned ins = 0; ins < v._instance; ++ins) {
+            for (auto it = v._basis.begin(); it < v._basis.end(); ++it) {
+              unsigned r = (*it + v._instance) % dimensions;
+              unsigned i = r / (sizeof(element_t) * CHAR_BITS);
+              unsigned b = r % (sizeof(element_t) * CHAR_BITS);
+              _vector[i] &= ~(ONE << b);
+            }
           }
         }
       }

@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(insert_vector) {
   
   std::cout << mms << std::endl;
   //BOOST_TEST_MESSAGE(msg);
-  mms.insert(v0, basis);
+  mms.insert_symbol(v0, basis);
   std::cout << mms << std::endl;
   //BOOST_TEST_MESSAGE(msg);
   // 5. retrieve vector

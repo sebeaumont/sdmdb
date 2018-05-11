@@ -15,7 +15,8 @@ enum sdm_status {
   ESYMBOL = -4,
   EMEMORY = -8,
   ERUNTIME = -16, 
-  EUNIMPLEMENTED = -32
+  EUNIMPLEMENTED = -32,
+  EINDEX = -64
 
 };  
 

@@ -9,8 +9,8 @@ find_package(Boost REQUIRED)
 include_directories (${Boost_INCLUDE_DIR})
 
 # header only cereal
-find_package(Cereal REQUIRED)
-include_directories (${Cereal_INCLUDE_DIRS})
+#find_package(Cereal REQUIRED)
+#include_directories (${Cereal_INCLUDE_DIRS})
 
 
 # c library: cshim + database

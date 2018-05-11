@@ -55,7 +55,7 @@ namespace sdm {
       return boost::none;
     } else {
       // non_const as density() function cannot be marked const!
-      auto v = sp->get_non_const_symbol_by_name(vn);
+      auto v = sp->get_mutable_symbol_by_name(vn);
       if (v) return  v->density(); else return boost::none;
     }
   }
@@ -77,6 +77,8 @@ namespace sdm {
   ///
   /// N.B. can cause memory outage and may side-effect
   /// the creation of a space and a symbol+vector within it
+
+  // XXX TODO look at inlining this so we can re-use
   
   status_t
   database::ensure_symbol(const std::string& sn,
@@ -91,22 +93,22 @@ namespace sdm {
       
     } else try {
         // use insert to create a new symbol with elemental "fingerprint"
-        database::space::inserted_t p = space->insert(vn, irand.shuffle());
+        sym = space->insert_mutable_symbol(vn, irand.shuffle());
         
-        if (p.second) {
+        if (sym) {
           // insert successful:
           // N.B. the returned symbol reference is to an *immutable* entry in the index
           // i.e. const database::space::symbol& s = *(p.first);
           return ANEW; // created
           
-        } else return ERUNTIME; // something in the index stopped us inserting!
+        } else return EINDEX; // something in the index stopped us inserting!
         
       } catch (boost::interprocess::bad_alloc& e) {
         // XXX: here is where we can try and grow the heap
         return EMEMORY; // 'cos we ran out of memory!
       }
   }
-  
+
 
   //////////////////////////////////////
   /// learning/transactional operations
@@ -121,32 +123,31 @@ namespace sdm {
   // database growth if possbile (or indeed may fail) TODO exception handling
   // and attempt growth on bad_alloc
   
-  status_t database::superpose(const std::string& ts,
-                               const std::string& tn,
-                               const std::string& ss,
-                               const std::string& sn,
-                               const bool newbasis) noexcept {
+  status_t
+  database::superpose(const std::string& ts,
+                      const std::string& tn,
+                      const std::string& ss,
+                      const std::string& sn,
+                      const bool newbasis) noexcept {
     
     // assume all symbols are present
     status_t state = AOLD;
     
     auto target_sp = ensure_space_by_name(ts);
-    if (!target_sp) return ERUNTIME;
+    if (!target_sp) return ESPACE;
     
     auto source_sp = ensure_space_by_name(ss);
-    if (!source_sp) return ERUNTIME;
+    if (!source_sp) return ESPACE;
     
     
     // get source symbol and optionally generate a new version or basis
     boost::optional<const space::symbol&> s = source_sp->get_symbol_by_name(sn, newbasis);
+
     if (!s) {
-      // TODO guard: if p.second else ...
-      space::inserted_t p = source_sp->insert(sn, irand.shuffle());
-      if (!p.second) return ERUNTIME;
-      // TODO: what about p.first then? instead of this
-      s = source_sp->get_symbol_by_name(sn);
-      if (!s) return ERUNTIME;
-      state = ANEW; // => a symbol wss created possbily within a new space.
+      // try inserting source symbol
+      s = source_sp->insert_symbol(sn, irand.shuffle());
+      if (!s) return EINDEX;
+      state = ANEW; // => a symbol was created possbily within a new space.
     }
     
     // get target symbol
@@ -155,14 +156,13 @@ namespace sdm {
     // CAVEAT: this must follow any insertions in the space
     // as any insert to index MAY invalidate vector or symbol pointers...
     
-    boost::optional<space::symbol&> t = target_sp->get_non_const_symbol_by_name(tn);
+    boost::optional<space::symbol&> t = target_sp->get_mutable_symbol_by_name(tn);
+    
     if (!t) {
-      // TODO guard: if p.second else ...
-      space::inserted_t p = target_sp->insert(tn, irand.shuffle());
-      if (!p.second) return ERUNTIME;
-      t = target_sp->get_non_const_symbol_by_name(tn);
-      if (!t) return ERUNTIME;
-      state = ANEW; // => a symbol wss created possbily within a new space.
+      // try inserting the target symbol
+      t = target_sp->insert_mutable_symbol(tn, irand.shuffle());
+      if (!t) return EINDEX; // something stopped us inserting inspite of not being found!
+      state = ANEW;          // a symbol wss created possbily within a new space.
     }
 
     // do the update to the target symbol
@@ -170,46 +170,101 @@ namespace sdm {
     return state;
   }
 
-  /// remove source from target
+
+  /// batch superpose target with multiple symbols from source space
+  status_t
+  database::superpose(const std::string& ts,
+                      const std::string& tn,
+                      const std::string& ss,
+                      const std::vector<std::string>& sns,
+                      const bool newbasis) noexcept {
+    // XXX TODO
+    return EUNIMPLEMENTED;
+  }
+    
+  /// remove source from target -- source and target must exist else this is a noop.
   
   status_t
   database::subtract(const std::string& tvs, 
+                     const std::string& tvn,
+                     const std::string& svs,
+                     const std::string& svn) noexcept {
+
+    // N.B. all spaces and symbols should exist
+    auto target_sp = get_space_by_name(tvs);
+    if (!target_sp) return ESPACE;
+
+    auto target_sym = target_sp->get_mutable_symbol_by_name(tvn);
+    if (!target_sym) return ESYMBOL;
+    
+    auto source_sp = get_space_by_name(svs);
+    if (!source_sp) return ESPACE;
+
+    auto source_sym = source_sp->get_symbol_by_name(svn);
+    if (!source_sym) return ESYMBOL;
+
+    // effect
+    target_sym->subtract(*source_sym);
+    return AOK;
+  }
+
+  
+  /// compute semantic similarity between symbols
+  
+  boost::optional<double>
+  database::similarity(const std::string& tvs,
+                       const std::string& tvn,
+                       const std::string& svs,
+                       const std::string& svn) noexcept {
+
+    // all sspaces and symbols must exist
+    auto target_sp = get_space_by_name(tvs);
+    if (!target_sp) return ESPACE;
+
+    auto target_sym = target_sp->get_mutable_symbol_by_name(tvn);
+    if (!target_sym) return ESYMBOL;
+
+    auto source_sp = get_space_by_name(svs);
+    if (!source_sp) return ESPACE;
+
+    auto source_sym = source_sp->get_symbol_by_name(svn);
+    if (!source_sym) return ESYMBOL;
+
+    // 
+    return target_sym->similarity(*source_sym);
+  }
+
+  /// compute semantic overlap between symbols
+  
+  boost::optional<double>
+  database::overlap(const std::string& tvs,
                     const std::string& tvn,
                     const std::string& svs,
                     const std::string& svn) noexcept {
-    // tricky -- which instance (or all) do you want to substract if source vector
-    // it e.g. white
-    return EUNIMPLEMENTED;
-  }
 
-  
-  // TODO ad-hoc comparison and vector properties
-  
-  boost::optional<double>
-  database::similarity(const std::string& snv,
-                       const std::string& vn,
-                       const std::string& snu,
-                       const std::string& un) noexcept {
-    // TODO
-    return 0.0;
-  }
+    // all sspaces and symbols must exist
+    auto target_sp = get_space_by_name(tvs);
+    if (!target_sp) return ESPACE;
+    
+    auto target_sym = target_sp->get_mutable_symbol_by_name(tvn);
+    if (!target_sym) return ESYMBOL;
 
-  boost::optional<double>
-  database::overlap(const std::string& snv,
-                    const std::string& vn,
-                    const std::string& snu,
-                    const std::string& un) noexcept {
-    // TODO
-    return 0.0;
+    auto source_sp = get_space_by_name(svs);
+    if (!source_sp) return ESPACE;
+
+    auto source_sym = source_sp->get_symbol_by_name(svn);
+    if (!source_sym) return ESYMBOL;
+    // 
+    return target_sym->overlap(*source_sym);
   }
 
   
   //////////////////////
-  /// space management
+  // space management //
   //////////////////////
   
   // create and manage named symbols by name -- space constructor does find_or_construct on segment
-  // database memoizes pointers to spaces to speed up symbol resolution
+  // then database memoizes pointers to spaces to speed up symbol resolution
   
   database::space* database::ensure_space_by_name(const std::string& name) {
     // lookup in cache
