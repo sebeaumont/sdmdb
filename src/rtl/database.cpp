@@ -33,7 +33,10 @@ namespace sdm {
   /// destructor flushes the segment iff sane
   
   database::~database() {
-    if (check_heap_sanity()) heap.flush();
+    if (check_heap_sanity()) {
+      heap.flush();
+      if (compclose) compactify_heap();
+    }
   }
   
   
@@ -78,35 +81,14 @@ namespace sdm {
   /// N.B. can cause memory outage and may side-effect
   /// the creation of a space and a symbol+vector within it
 
-  // XXX TODO look at inlining this so we can re-use
+  // XXX TODO look at inlining a version of this so we can re-use
   
   status_t
-  database::ensure_symbol(const std::string& sn,
-                          const std::string& vn) noexcept {
-    // may create a space
-    auto space = ensure_space_by_name(sn);
-    if (!space) return ERUNTIME;
-    
-    auto sym = space->get_symbol_by_name(vn);
-    if (sym) {
-      return AOLD; // found
-      
-    } else try {
-        // use insert to create a new symbol with elemental "fingerprint"
-        sym = space->insert_mutable_symbol(vn, irand.shuffle());
-        
-        if (sym) {
-          // insert successful:
-          // N.B. the returned symbol reference is to an *immutable* entry in the index
-          // i.e. const database::space::symbol& s = *(p.first);
-          return ANEW; // created
-          
-        } else return EINDEX; // something in the index stopped us inserting!
-        
-      } catch (boost::interprocess::bad_alloc& e) {
-        // XXX: here is where we can try and grow the heap
-        return EMEMORY; // 'cos we ran out of memory!
-      }
+  database::namedvector(const std::string& sn,
+                        const std::string& vn,
+                        const space::symbol::type ty) noexcept {
+
+    return ensure_symbol(sn, vn, ty);
   }
 
 
@@ -234,6 +216,7 @@ namespace sdm {
     return target_sym->similarity(*source_sym);
   }
 
+
   /// compute semantic overlap between symbols
   
   boost::optional<double>
@@ -259,6 +242,41 @@ namespace sdm {
   }
 
   
+  //////////////////////////////////////////
+  /// inline private or protected utilities
+  //////////////////////////////////////////
+  
+  inline status_t
+  database::ensure_mutable_symbol(const std::string& spacename,
+                        const std::string& name,
+                        const space::symbol::type type) {
+    
+    space* sp = ensure_space_by_name(spacename);
+
+    auto s = sp->get_mutable_symbol_by_name(name);
+    // if not found try and insert new symbol
+    if (!s)
+      return sp->insert_mutable_symbol(name, irand.shuffle(), type) ? ANEW : EINDEX;
+    else
+      return AOK;
+  }
+  
+  
+  inline status_t 
+  database::ensure_symbol(const std::string& spacename,
+                const std::string& name,
+                const space::symbol::type type) {
+
+    space* sp = ensure_space_by_name(spacename);
+
+    auto s = sp->get_symbol_by_name(name);
+    if (!s)
+      return sp->insert_symbol(name, irand.shuffle(), type) ? ANEW : EINDEX;
+    else
+      return AOK;
+  }
+
+  
   //////////////////////
   // space management //
   //////////////////////
@@ -266,13 +284,15 @@ namespace sdm {
   // create and manage named symbols by name -- space constructor does find_or_construct on segment
   // then database memoizes pointers to spaces to speed up symbol resolution
   
-  database::space* database::ensure_space_by_name(const std::string& name) {
+  inline database::space*
+  database::ensure_space_by_name(const std::string& name) {
     // lookup in cache
     auto it = spaces.find(name);
     
     if (it == spaces.end()) {
       // delegate find_or_construct to symbol_space...
       // and create a runtime cache entry
+      // XXX N.B. this coould fail if we run out of space
       space* sp = new space(name, heap);
       spaces[name] = sp;
       return sp;
@@ -299,7 +319,8 @@ namespace sdm {
   */
   
   // this is meant to be fast so no optional's here -- we could inline this.
-  database::space* database::get_space_by_name(const std::string& name) {
+  inline database::space*
+  database::get_space_by_name(const std::string& name) {
     auto it = spaces.find(name);
     if (it == spaces.end())
       return nullptr;
@@ -345,20 +366,27 @@ namespace sdm {
   ////////////////////////
     
   bool database::grow_heap_by(const std::size_t& extra_bytes) noexcept {
-    // mapped_file grow
-    // todo unmap heap
-    //
+    // XXX totally untested
+    isexpanding = true;
+    
     if (heap.grow(heapimage.c_str(), extra_bytes)) {
-      // remap
+      // remap... shoud we unmap first?
       heap = segment_t(bip::open_only, heapimage.c_str());
-      std::cout << "free: " << free_heap() << " max: " << maxheap << " init:" << inisize << " heap:" << heap_size() << std::endl;
+      isexpanding = false;
+      // 
+      std::cout << "free: " << free_heap()
+                << " max: " << maxheap
+                << " init:" << inisize
+                << " heap:" << heap_size()
+                << std::endl;
+      
       if (check_heap_sanity()) return true;
     }
     return false;
   }
   
   bool database::compactify_heap() noexcept {
-      // mapped_file shrink_to_fit -- compact
+    // mapped_file shrink_to_fit -- compact
     return heap.shrink_to_fit(heapimage.c_str());
   }
   

@@ -87,11 +87,13 @@ namespace sdm {
     /////////////////////////////////////////////////////
 
     
-    /// lookup or create new symbol
+    /// assert a named vector
     
     status_t
-    ensure_symbol(const std::string& space_name,
-                  const std::string& symbol_name) noexcept;
+    namedvector(const std::string& space_name,
+                const std::string& symbol_name,
+                const space::symbol::type type = space::symbol::type::normal
+                ) noexcept;
 
     
     /// add or superpose
@@ -153,12 +155,22 @@ namespace sdm {
     inline bool check_heap_sanity() noexcept { return heap.check_sanity(); }
     inline bool can_grow_heap() noexcept { return (heap.get_size() < maxheap); }
 
-  protected:
+
+    ////////////////////////////////////////////
+    /// internal functions typically inlined ///
+    ////////////////////////////////////////////
     
-    /// get named symbol (non-const)
-    boost::optional<space::symbol&>
-    get_symbol(const std::string& space_name,
-               const std::string& symbol_name) noexcept;
+  protected:
+
+    inline status_t
+    ensure_mutable_symbol(const std::string&,
+                          const std::string&,
+                          const space::symbol::type = space::symbol::type::normal);
+
+    inline status_t
+    ensure_symbol(const std::string&,
+                  const std::string&,
+                  const space::symbol::type = space::symbol::type::normal);
 
     
   private:

@@ -162,7 +162,7 @@ int main(int argc, const char** argv) {
       if (boost::iequals(cv[0], "=")) {
 
         // 
-        status_t s = rts.ensure_symbol(default_spacename, cv[1]);
+        status_t s = rts.namedvector(default_spacename, cv[1]);
 
         // now lookup the inserted symbol density just to be sure
         auto maybe_density = rts.density(default_spacename, cv[1]);
@@ -182,7 +182,7 @@ int main(int argc, const char** argv) {
           while(std::getline(ins, fline)) {
             boost::trim(fline);
             //std::cout << "addv(" << default_spacename << ":" << fline << ")" << std::endl;
-            rts.ensure_symbol(default_spacename, fline);
+            rts.namedvector(default_spacename, fline);
             n++;
           }
           std::cout << mytimer << " loaded: " << n << std::endl; 
