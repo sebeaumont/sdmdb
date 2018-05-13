@@ -22,7 +22,13 @@ enum sdm_status {
 
 typedef enum sdm_status status_t;
 
-/* check what c-language will accept here is bool ansi c? */
-/* int sdm_error(status_t s) { return (s<0); } */
+
+#ifdef __cplusplus
+#define BOOL bool
+#else
+#define BOOL unsigned
+#endif
+
+inline BOOL sdm_error(status_t s) { return (s<0); }
 
 #endif

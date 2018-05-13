@@ -77,7 +77,7 @@ namespace sdm {
     /////////////////////////
     
     /// get vector density
-    boost::optional<const double>
+    std::pair<const status_t, const double>
     density(const std::string& space_name,
             const std::string& vector_name) noexcept;
 
@@ -89,7 +89,7 @@ namespace sdm {
     
     /// assert a named vector
     
-    status_t
+    const status_t
     namedvector(const std::string& space_name,
                 const std::string& symbol_name,
                 const space::symbol::type type = space::symbol::type::normal
@@ -98,21 +98,21 @@ namespace sdm {
     
     /// add or superpose
     
-    status_t
+    const status_t
     superpose(const std::string& ts, const std::string& tn,
               const std::string& ss, const std::string& sn,
               const bool newbasis = false) noexcept;
 
     /// batch superpose several symbols from source space
 
-    status_t
+    const status_t
     superpose(const std::string& ts, const std::string& tn,
               const std::string& ss, const std::vector<std::string>& sns,
               const bool newbasis = false) noexcept;
     
     /// subtract
 
-    status_t
+    const status_t
     subtract(const std::string& ts, const std::string& tn,
              const std::string& ss, const std::string& sn) noexcept;
     
@@ -123,12 +123,14 @@ namespace sdm {
     ////////////////////////
     
     /// simlilarity (unit distance)
-    boost::optional<double>
+
+    const std::pair<const status_t, const double>
     similarity(const std::string&, const std::string&,
                const std::string&, const std::string&) noexcept;
 
     /// inner product (overlap)
-    boost::optional<double>
+    
+    const std::pair<const status_t, const double>
     overlap(const std::string&, const std::string&,
             const std::string&, const std::string&) noexcept;
 
@@ -162,15 +164,15 @@ namespace sdm {
     
   protected:
 
-    inline status_t
+    inline std::pair<status_t, space::symbol&>
     ensure_mutable_symbol(const std::string&,
                           const std::string&,
-                          const space::symbol::type = space::symbol::type::normal);
+                          const space::symbol::type);
 
-    inline status_t
+    inline std::pair<status_t, const space::symbol*>
     ensure_symbol(const std::string&,
                   const std::string&,
-                  const space::symbol::type = space::symbol::type::normal);
+                  const space::symbol::type);
 
     
   private:
@@ -183,14 +185,13 @@ namespace sdm {
     
     bool compactify_heap() noexcept;
     
-    
-      // get space
-    space* get_space_by_name(const std::string&); 
+    /// get space
+    space* get_space_by_name(const std::string&) noexcept; 
 
     /// database memoizes pointers to named spaces to optimize symbol resolution 
-    space* ensure_space_by_name(const std::string&); 
+    std::pair<status_t, space*> ensure_space_by_name(const std::string&); 
     
-    // get randomizer
+    /// get randomizer
     inline random::index_randomizer& randomidx(void) { return irand; }
 
     

@@ -166,7 +166,7 @@ int main(int argc, const char** argv) {
 
         // now lookup the inserted symbol density just to be sure
         auto maybe_density = rts.density(default_spacename, cv[1]);
-        std::cout << maybe_density << "/" << s << std::endl;
+        std::cout << maybe_density.second << "/" << s << std::endl;
         
         
       } else if (boost::iequals(cv[0], "<")) {
@@ -181,8 +181,11 @@ int main(int argc, const char** argv) {
           
           while(std::getline(ins, fline)) {
             boost::trim(fline);
-            //std::cout << "addv(" << default_spacename << ":" << fline << ")" << std::endl;
-            rts.namedvector(default_spacename, fline);
+            auto sts = rts.namedvector(default_spacename, fline);
+            if (sdm_error(sts)) {
+              std::cout << "stopped loading due to error: " << sts << std::endl;
+              break;
+            }
             n++;
           }
           std::cout << mytimer << " loaded: " << n << std::endl; 
@@ -193,26 +196,27 @@ int main(int argc, const char** argv) {
       } else if (boost::iequals(cv[0], ">")) {
         ; // export file
       
-      /* TODO convert these to use abstract api */
         
       } else if (boost::iequals(cv[0], "-")) {
         rts.subtract(default_spacename, cv[1], default_spacename, cv[2]);
-        std::cout << rts.density(default_spacename, cv[1]) << std::endl;
+        std::cout << rts.density(default_spacename, cv[1]).second << std::endl;
       
       } else if (boost::iequals(cv[0], "^")) {
         rts.superpose(default_spacename, cv[1], default_spacename, cv[2]);
-        std::cout << rts.density(default_spacename, cv[1]) << std::endl;
+        std::cout << rts.density(default_spacename, cv[1]).second << std::endl;
 
       } else if (boost::iequals(cv[0], "+")) {
         rts.superpose(default_spacename, cv[1], default_spacename, cv[2], true);
-        std::cout << rts.density(default_spacename, cv[1]) << std::endl;
+        std::cout << rts.density(default_spacename, cv[1]).second << std::endl;
         
       } else if (boost::iequals(cv[0], "?")) {
-        std::cout << rts.similarity(default_spacename, cv[1], default_spacename, cv[2]);
+        std::cout << rts.similarity(default_spacename, cv[1], default_spacename, cv[2]).second
+                  << std::endl;
 
         
       } else if (boost::iequals(cv[0], ".")) {
-        std::cout << rts.overlap(default_spacename, cv[1], default_spacename, cv[2]) << std::endl;
+        std::cout << rts.overlap(default_spacename, cv[1], default_spacename, cv[2]).second
+                  << std::endl;
         
       } else
         std::cout << "syntax error:" << input << std::endl;
