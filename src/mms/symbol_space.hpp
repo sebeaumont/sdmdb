@@ -39,7 +39,10 @@ namespace sdm {
      * (elemental) vectors
      */
 
-    template <typename VectorElementType, std::size_t VectorElems, std::size_t ElementalBits, class SegmentClass>
+    template <typename VectorElementType,
+              std::size_t VectorElems,
+              std::size_t ElementalBits,
+              class SegmentClass>
 
     /// symbol_space - managed memory segment with multi index container for symbols
     
@@ -51,7 +54,10 @@ namespace sdm {
       // allocators derived from segment type
       typedef typename segment_t::segment_manager segment_manager_t;
       
-      typedef bip::basic_string<char,std::char_traits<char>, bip::allocator<char, segment_manager_t>> shared_string_t;
+      typedef bip::basic_string<char,
+                                std::char_traits<char>,
+                                bip::allocator<char, segment_manager_t>> shared_string_t;
+      
       typedef typename bip::allocator<void, segment_manager_t> void_allocator_t;
       
       ////////////////////////
@@ -151,11 +157,54 @@ namespace sdm {
       
       typedef std::pair<typename symbol_table_t::iterator, bool> inserted_t;
       
-      /// attempt to insert symbol into space
-      
-      inline inserted_t insert(const std::string& k, const std::vector<unsigned>& fp) {
-        return index->insert(symbol(k.c_str(), fp, allocator));
+      /// attempt to insert symbol into index ... may deprecate this i/f
+      /*
+      inline inserted_t
+      insert(const std::string& k,
+             const std::vector<unsigned>& fp,
+             const typename symbol::type ty = symbol::type::normal) {
+        return index->insert(symbol(k.c_str(), fp, allocator, ty));
       }
+      */
+      
+      /// attempt to construct and insert named symbol into index
+      
+      inline boost::optional<const symbol&>
+      insert_symbol(const std::string& name,
+                    const std::vector<unsigned>& basis,
+                    const typename symbol::type ty = symbol::type::normal) {
+
+        // construct symbol and try and insert into index
+        inserted_t either = index->insert(symbol(name.c_str(), basis, allocator, ty));
+        // index may prevent us 
+        if (!either.second) return boost::none;
+        else return *either.first;
+      }
+
+      
+      /// Attempt to construct and insert named symbol into index
+
+      /// CAUTION non const reference to symbol can allow callers to
+      ///   side-effect symbol state -- must not alter index state or
+      ///   memory layout the use case is to allow methods on symbol that
+      ///   are non const, for properties that are modified during
+      ///   learning operations
+
+      inline boost::optional<symbol&>
+      insert_mutable_symbol(const std::string& name,
+                            const std::vector<unsigned>& basis,
+                            const typename symbol::type ty = symbol::type::normal) {
+
+        // construct symbol and try and insert into index
+        inserted_t either = index->insert(symbol(name.c_str(), basis, allocator, ty));
+        // index may prevent us 
+        if (!either.second) return boost::none;
+        else {
+          symbol& s = const_cast<symbol&>(*either.first);
+          return s;
+        }
+      }
+      
       
       //////////////////////////
       /// random access index //
@@ -170,13 +219,15 @@ namespace sdm {
         return symbols[i]; 
       }
       
+
       ////////////////////////////
       /// lookup symbol by name //
       ////////////////////////////
       
       typedef typename symbol_table_t::template nth_index<0>::type symbol_by_name;
 
-      inline boost::optional<const symbol&> get_symbol_by_name(const std::string& k, bool refcount=false) {
+      inline boost::optional<const symbol&>
+      get_symbol_by_name(const std::string& k, bool refcount=false) {
         symbol_by_name& name_idx = index->template get<0>();
         typename symbol_by_name::iterator i = name_idx.find(shared_string(k));
         if (i == name_idx.end()) return boost::none;
@@ -198,9 +249,12 @@ namespace sdm {
         
       /* CAUTION non const reference to symbol can allow callers to
          side-effect symbol state -- must not alter index state or
-         memory layout */
+         memory layout the use case is to allow methods on symbol that
+         are non const, for properties that are modified during
+         learning operations */
       
-      inline boost::optional<symbol&> get_non_const_symbol_by_name(const std::string& k, bool refcount=false) {
+      inline boost::optional<symbol&>
+      get_mutable_symbol_by_name(const std::string& k, bool refcount=false) {
         symbol_by_name& name_idx = index->template get<0>();
         typename symbol_by_name::iterator i = name_idx.find(shared_string(k));
         if (i == name_idx.end()) return boost::none;
@@ -209,6 +263,8 @@ namespace sdm {
         return s;
       }
 
+
+      
       ///////////////////////////////////////
       /// lookup symbols by prefix of name //
       ///////////////////////////////////////
@@ -216,7 +272,8 @@ namespace sdm {
       typedef typename symbol_table_t::template nth_index<1>::type symbol_by_prefix;  
       typedef typename symbol_by_prefix::iterator symbol_iterator;
 
-      inline std::pair<symbol_iterator, symbol_iterator> search(const std::string& k) {
+      inline std::pair<symbol_iterator, symbol_iterator>
+      search(const std::string& k) {
         symbol_by_prefix& name_idx = index->template get<1>();
         return name_idx.equal_range(partial_string(shared_string(k)));
       }

@@ -15,13 +15,20 @@ enum sdm_status {
   ESYMBOL = -4,
   EMEMORY = -8,
   ERUNTIME = -16, 
-  EUNIMPLEMENTED = -32
+  EUNIMPLEMENTED = -32,
+  EINDEX = -64
 
 };  
 
 typedef enum sdm_status status_t;
 
-/* check what c-language will accept here is bool ansi c? */
-/* int sdm_error(status_t s) { return (s<0); } */
+
+#ifdef __cplusplus
+#define BOOL bool
+#else
+#define BOOL unsigned
+#endif
+
+inline BOOL sdm_error(status_t s) { return (s<0); }
 
 #endif

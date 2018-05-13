@@ -184,12 +184,10 @@ int main(int argc, const char** argv) {
   
   if (spaces.size() > 0) {
     cout << "existing spaces in image:" << endl;
-  
-    for (unsigned i = 0; i < spaces.size(); ++i) {
-      cout << "\t" << spaces[i];
-      // now actually get the pointers and cards
-      auto spp = db.get_space_by_name(spaces[i]);
-      cout << "[" << spp->entries() << "]" << endl;
+    // see if we can find space names
+    std::vector<std::string> spaces = db.get_named_spaces();
+    for (auto sn: spaces) {
+      std::cout << sn << " #" << db.get_space_cardinality(sn) << std::endl;
     }
   }
   

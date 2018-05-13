@@ -33,9 +33,12 @@ namespace sdm {
 
       typedef elemental_vector<segment_manager_t, unsigned> elemental_vector_t;
 
-      // state 
+      // state
+      enum type { normal, white, pink, brown };
+
       shared_string_t _name;
       unsigned _instance;
+      type _type;
       
     private:
       
@@ -48,13 +51,15 @@ namespace sdm {
       
       symbol(const char* s,
              const std::vector<unsigned>& f,
-             const allocator_t& a)
+             const allocator_t& a,
+             const type t = normal)
         : _name(s, a),
           _instance(0),
+          _type(t),
           _basis(f, elemental_bits, a),
           _vector(a) {}
     
-      /// copy of name
+      /// copy of name (XXX why? seems unecessary) try unit tests without this!
 
       inline const std::string name(void) const {
         return std::string(_name.begin(), _name.end());
@@ -64,7 +69,7 @@ namespace sdm {
       /// printer for symbol XXX might be useful to dump symbol representation to stream 
       
       friend std::ostream& operator<<(std::ostream& os, const symbol& s) {
-        os << s._name << ":" << s._instance;
+        os << s._name << "`" << s._instance;
         return os;
       }
 
@@ -109,7 +114,7 @@ namespace sdm {
         return distance;
       }
     
-      /// inner product is the commonality
+      /// inner product is the commonality/overlap
       
       inline const std::size_t inner(const symbol& v) {
         std::size_t count = 0;
@@ -184,8 +189,8 @@ namespace sdm {
       /// learning utilities //
       /////////////////////////
 
-      inline void superpose(const symbol& v, bool whiten=false) {
-        if (whiten) {
+      inline void superpose(const symbol& v) {
+        if (v._type == white) {
           // clear 1/2
           unsigned h = v._basis.size() / 2;
           for (auto it = v._basis.begin(); it < v._basis.begin() + h; ++it) {
@@ -212,6 +217,37 @@ namespace sdm {
           }
         }
       }
+
+      ///////////////////////////////////////////////////////////////////////////
+      // remove elemental bits of all instances 
+      // XXX TODO we could select a set of instance indexes and default to this
+      
+      inline void subtract(const symbol&v) {
+        // we must subtract all bases of source vector
+        if (v._type == white) {
+          unsigned h = v._basis.size() / 2;
+          for (unsigned ins = 0; ins < v._instance; ++ins) {
+            // clear top 1/2
+            for (auto it = v._basis.begin() + h; it < v._basis.end(); ++it) {
+              unsigned r = (*it + ins) % dimensions;
+              unsigned i = r / (sizeof(element_t) * CHAR_BITS);
+              unsigned b = r % (sizeof(element_t) * CHAR_BITS);
+              _vector[i] &= ~(ONE << b);
+            }
+          }
+        } else {
+          // clear all instances
+          for (unsigned ins = 0; ins < v._instance; ++ins) {
+            for (auto it = v._basis.begin(); it < v._basis.end(); ++it) {
+              unsigned r = (*it + v._instance) % dimensions;
+              unsigned i = r / (sizeof(element_t) * CHAR_BITS);
+              unsigned b = r % (sizeof(element_t) * CHAR_BITS);
+              _vector[i] &= ~(ONE << b);
+            }
+          }
+        }
+      }
+      
     };
     
   }

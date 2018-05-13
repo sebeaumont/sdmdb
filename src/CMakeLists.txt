@@ -30,7 +30,7 @@ set (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/../cmake/Module
 # library install paths
 #######################
 
-set (CMAKE_INSTALL_PREFIX "/usr/local")
+set (CMAKE_INSTALL_PREFIX "/usr/local/sdm")
 
 set (CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 set (CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
