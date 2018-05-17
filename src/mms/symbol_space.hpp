@@ -243,7 +243,7 @@ namespace sdm {
         bump_reference(void) {
         }
         void operator() (symbol& s) {
-          s._instance++;
+          s._refcount++;
         }
       };
         
@@ -259,7 +259,7 @@ namespace sdm {
         typename symbol_by_name::iterator i = name_idx.find(shared_string(k));
         if (i == name_idx.end()) return boost::none;
         symbol& s = const_cast<symbol&>(*i);
-        if (refcount) s._instance++;
+        if (refcount) s._refcount++;
         return s;
       }
 

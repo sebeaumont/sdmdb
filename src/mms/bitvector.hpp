@@ -14,7 +14,7 @@ namespace sdm { namespace mms {
         return _base[i];
       }
       
-      /// XXX NEW XXX what's the use case that't not part of copy constructor?
+      /// XXX NEW XXX ?? what's the use case that's not part of copy constructor?
       void copy_me(element_t* here) {
 #pragma unroll
 #pragma clang loop vectorize(enable) interleave(enable)
@@ -76,7 +76,7 @@ namespace sdm { namespace mms {
       }
       
       
-      inline std::size_t countsum(const bitvector& v) {
+      inline std::size_t countunion(const bitvector& v) {
         std::size_t count = 0;
 #pragma unroll
 #pragma clang loop vectorize(enable) interleave(enable)

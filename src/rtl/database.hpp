@@ -101,14 +101,14 @@ namespace sdm {
     const status_t
     superpose(const std::string& ts, const std::string& tn,
               const std::string& ss, const std::string& sn,
-              const bool newbasis = false) noexcept;
+              const int shift = 0) noexcept;
 
     /// batch superpose several symbols from source space
 
     const status_t
     superpose(const std::string& ts, const std::string& tn,
-              const std::string& ss, const std::vector<std::string>& sns,
-              const bool newbasis = false) noexcept;
+              const std::string& ss, const std::vector<const std::string>& sns,
+              const std::vector<const int> shifts) noexcept;
     
     /// subtract
 

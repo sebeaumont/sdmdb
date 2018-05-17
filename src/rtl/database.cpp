@@ -112,7 +112,7 @@ namespace sdm {
                       const std::string& tn,
                       const std::string& ss,
                       const std::string& sn,
-                      const bool newbasis) noexcept {
+                      const int shifted) noexcept {
     
     // assume all symbols are present
     status_t state = AOLD;
@@ -125,7 +125,7 @@ namespace sdm {
     
     
     // get source symbol and optionally generate a new version or basis
-    boost::optional<const space::symbol&> s = ssp.second->get_symbol_by_name(sn, newbasis);
+    boost::optional<const space::symbol&> s = ssp.second->get_symbol_by_name(sn);
 
     if (!s) {
       // try inserting source symbol
@@ -161,8 +161,8 @@ namespace sdm {
   database::superpose(const std::string& ts,
                       const std::string& tn,
                       const std::string& ss,
-                      const std::vector<std::string>& sns,
-                      const bool newbasis) noexcept {
+                      const std::vector<const std::string>& sns,
+                      const std::vector<const int> shifts) noexcept {
     
     // XXX new approach to keep allocations to minimum places in code
     //status_t sts = ensure_mutable_symbol
