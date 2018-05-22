@@ -20,7 +20,7 @@ namespace sdm {
       // construct the memory mapped segment for database
       heap(bip::open_or_create, mmf.c_str(), initial_size),
       heapimage(mmf),             // diskimage path
-      compclose(compact),           // compact heap on close?
+      compclose(compact),         // compact heap on close?
       // initialize PRNG
       irand(random::index_randomizer(space::symbol::dimensions)) {
     
@@ -382,14 +382,7 @@ namespace sdm {
   */
   
   // this is meant to be fast so no optional's here
-  inline database::space*
-  database::get_space_by_name(const std::string& name) noexcept {
-    auto it = spaces.find(name);
-    if (it == spaces.end())
-      return nullptr;
-    else
-      return it->second;
-  }
+  // XX might change i/f to return a status pair
 
    ////////////////////////
   // gc, heap management

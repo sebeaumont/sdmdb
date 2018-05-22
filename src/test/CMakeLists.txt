@@ -17,13 +17,18 @@ target_link_libraries(rtl_load_space ${CMAKE_EXE_LINKER_FLAGS})
 add_executable (mms_0 mms_0.cpp)
 target_link_libraries(mms_0 ${CMAKE_EXE_LINKER_FLAGS})
 
+# manifold api
+add_executable (rtl_manifold rtl_manifold.cpp)
+target_link_libraries(rtl_manifold sdmdb)
+
 # test programs
 add_test(NAME mms_0 COMMAND mms_0 --log_level=all)
-
+add_test(NAME rtl_manifold COMMAND rtl_manifold --log_level=all)
 add_test(NAME rtl_load_space COMMAND rtl_load_space --log_level=all)
 
 
-# test utility 
+
+# utilities 
 
 add_executable (sdmi sdmi.cpp)
 target_link_libraries(sdmi ${Boost_LIBRARIES})

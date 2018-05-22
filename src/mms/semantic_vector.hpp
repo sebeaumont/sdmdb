@@ -12,8 +12,12 @@ namespace sdm {
     ///
     /// semantic_vector represents state in managed memory space
     ///
-    template <typename segment_manager_t, typename element_t, unsigned n_elements>    
-    struct semantic_vector : public bip::vector<element_t, bip::allocator<element_t, segment_manager_t>> {
+    template <typename segment_manager_t,
+              typename element_t,
+              unsigned n_elements>
+    
+    struct semantic_vector
+      : public bip::vector<element_t, bip::allocator<element_t, segment_manager_t>> {
 
       typedef typename bip::allocator<void, segment_manager_t> void_allocator_t;
       

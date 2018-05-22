@@ -67,7 +67,8 @@ namespace sdm {
         return std::string(_name.begin(), _name.end());
       }
   
-    
+      inline const semantic_vector_t vector() { return _vector; }
+      
       /// printer for symbol XXX might be useful to dump symbol representation to stream 
       
       friend std::ostream& operator<<(std::ostream& os, const symbol& s) {

@@ -64,6 +64,7 @@ namespace sdm {
     ~database();
 
     /// search for symbols starting with prefix
+    
     typedef std::pair<database::space::symbol_iterator,
                       database::space::symbol_iterator> symbol_list;
     
@@ -88,12 +89,13 @@ namespace sdm {
 
     
     /// assert a named vector
-    
+
+        
     const status_t
     namedvector(const std::string& space_name,
                 const std::string& symbol_name,
-                const space::symbol::type type = space::symbol::type::normal
-                ) noexcept;
+                // XX to do change type to a double p value default to 1
+                const space::symbol::type type = space::symbol::type::normal) noexcept;
 
     
     /// add or superpose
@@ -174,7 +176,14 @@ namespace sdm {
                   const std::string&,
                   const space::symbol::type);
 
-    
+    /// get space
+    //inline space* get_space_by_name(const std::string&) noexcept;     
+    inline space* get_space_by_name(const std::string& name) noexcept {
+      auto it = spaces.find(name);
+      return (it == spaces.end()) ? nullptr : it->second;
+    }
+
+
   private:
     
     //////////////////////
@@ -185,10 +194,7 @@ namespace sdm {
     
     bool compactify_heap() noexcept;
     
-    /// get space
-    space* get_space_by_name(const std::string&) noexcept; 
-
-    /// database memoizes pointers to named spaces to optimize symbol resolution 
+    /// database memoizes pointers to named spaces to optimize symbol lookup
     std::pair<status_t, space*> ensure_space_by_name(const std::string&); 
     
     /// get randomizer
@@ -212,9 +218,11 @@ namespace sdm {
     random::index_randomizer irand;
 
     // are we trying to grow?
-    volatile bool isexpanding; 
+    volatile bool isexpanding;
+
+  protected:
     // read through space cache
-    std::map<const std::string, space*> spaces; // used space cache
+    std::map<const std::string, space*> spaces; // run time space index
  
   };
 }
