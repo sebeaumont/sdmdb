@@ -21,8 +21,15 @@ target_link_libraries(mms_0 ${CMAKE_EXE_LINKER_FLAGS})
 add_executable (rtl_manifold rtl_manifold.cpp)
 target_link_libraries(rtl_manifold sdmdb)
 
+# rtl api
+add_executable (rtl_api rtl_api.cpp)
+target_link_libraries(rtl_api sdmdb)
+
+
 # test programs
+
 add_test(NAME mms_0 COMMAND mms_0 --log_level=all)
+add_test(NAME rtl_api COMMAND rtl_api --log_level=all)
 add_test(NAME rtl_manifold COMMAND rtl_manifold --log_level=all)
 add_test(NAME rtl_load_space COMMAND rtl_load_space --log_level=all)
 

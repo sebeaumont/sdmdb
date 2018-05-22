@@ -48,8 +48,9 @@ BOOST_AUTO_TEST_CASE(rts_load_vectors) {
   
   std::string fline;
   int loaded = 0;
+  int onlyload = 100000;
   
-  while(std::getline(ins, fline)) {
+  while(std::getline(ins, fline) && loaded < onlyload) {
     boost::trim(fline);
     auto s = rts.namedvector(test_space1, fline);
     if (!sdm_error(s)) loaded++;

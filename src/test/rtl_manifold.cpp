@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_CASE(rts_get_topology) {
   
   std::string fline;
   int loaded = 0;
-  int onlyload = 1000;
+  int onlyload = 100000;
   
   while(std::getline(ins, fline) && loaded < onlyload) {
     boost::trim(fline);
