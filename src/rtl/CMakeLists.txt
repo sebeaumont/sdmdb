@@ -14,14 +14,14 @@ include_directories (${Boost_INCLUDE_DIR})
 
 
 # c library: cshim + database
-add_library(sdm SHARED sdmlib.cpp database.cpp)
+add_library(sdm SHARED sdmlib.cpp database.cpp manifold.cpp)
 
 set_target_properties(sdm PROPERTIES
   VERSION ${SDM_VERSION_MAJOR}.${SDM_VERSION_MINOR}
   SOVERSION ${SDM_VERSION_MAJOR})
 
-# C++ library -- database only
-add_library(sdmdb SHARED database.cpp)
+# C++ library -- database and locally euclidean topologies
+add_library(sdmdb SHARED database.cpp manifold.cpp)
 
 set_target_properties(sdmdb PROPERTIES
   VERSION ${SDM_VERSION_MAJOR}.${SDM_VERSION_MINOR}

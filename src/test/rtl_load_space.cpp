@@ -4,7 +4,7 @@
 #include <cstdio>
 #include <boost/algorithm/string.hpp>
 
-#define BOOST_TEST_MODULE runtime_library
+#define BOOST_TEST_MODULE load_symbols
 #include <boost/test/included/unit_test.hpp>
 
 #include "rtl/database.hpp"
@@ -32,7 +32,6 @@ struct database_setup {
   }
 };
 
-//BOOST_AUTO_TEST_SUITE(database_library)
 
 BOOST_FIXTURE_TEST_SUITE(database_library, database_setup)
 
@@ -49,11 +48,12 @@ BOOST_AUTO_TEST_CASE(rts_load_vectors) {
   
   std::string fline;
   int loaded = 0;
+  int onlyload = 100000;
   
-  while(std::getline(ins, fline)) {
+  while(std::getline(ins, fline) && loaded < onlyload) {
     boost::trim(fline);
     auto s = rts.namedvector(test_space1, fline);
-    if (s > 0) loaded++;
+    if (!sdm_error(s)) loaded++;
   }
   
   // get cardinality of space
@@ -62,6 +62,7 @@ BOOST_AUTO_TEST_CASE(rts_load_vectors) {
   BOOST_REQUIRE(card);
   BOOST_CHECK_EQUAL(*card, loaded);
   
+  BOOST_TEST_MESSAGE("loaded: " << loaded << " will now prefix search (all)");
   
   // lookup all vectors
   auto sit = rts.prefix_search(test_space1, "");

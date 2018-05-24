@@ -20,7 +20,7 @@ namespace sdm {
       // construct the memory mapped segment for database
       heap(bip::open_or_create, mmf.c_str(), initial_size),
       heapimage(mmf),             // diskimage path
-      compclose(compact),           // compact heap on close?
+      compclose(compact),         // compact heap on close?
       // initialize PRNG
       irand(random::index_randomizer(space::symbol::dimensions)) {
     
@@ -112,7 +112,7 @@ namespace sdm {
                       const std::string& tn,
                       const std::string& ss,
                       const std::string& sn,
-                      const bool newbasis) noexcept {
+                      const int shifted) noexcept {
     
     // assume all symbols are present
     status_t state = AOLD;
@@ -125,7 +125,7 @@ namespace sdm {
     
     
     // get source symbol and optionally generate a new version or basis
-    boost::optional<const space::symbol&> s = ssp.second->get_symbol_by_name(sn, newbasis);
+    boost::optional<const space::symbol&> s = ssp.second->get_symbol_by_name(sn);
 
     if (!s) {
       // try inserting source symbol
@@ -161,8 +161,8 @@ namespace sdm {
   database::superpose(const std::string& ts,
                       const std::string& tn,
                       const std::string& ss,
-                      const std::vector<std::string>& sns,
-                      const bool newbasis) noexcept {
+                      const std::vector<const std::string>& sns,
+                      const std::vector<const int> shifts) noexcept {
     
     // XXX new approach to keep allocations to minimum places in code
     //status_t sts = ensure_mutable_symbol
@@ -382,14 +382,7 @@ namespace sdm {
   */
   
   // this is meant to be fast so no optional's here
-  inline database::space*
-  database::get_space_by_name(const std::string& name) noexcept {
-    auto it = spaces.find(name);
-    if (it == spaces.end())
-      return nullptr;
-    else
-      return it->second;
-  }
+  // XX might change i/f to return a status pair
 
    ////////////////////////
   // gc, heap management

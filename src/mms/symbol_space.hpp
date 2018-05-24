@@ -48,7 +48,7 @@ namespace sdm {
     
     class symbol_space final {
 
-      // stored objects have to use this segment type for heap allocators
+      // stored objects have to use this segment type for heap allocaors
       typedef SegmentClass segment_t;
       
       // allocators derived from segment type
@@ -64,10 +64,11 @@ namespace sdm {
       // implement symbol type
       
       typedef symbol<segment_manager_t, shared_string_t, void_allocator_t> symbol_t;
+      // symbol_t dependant types
       typedef typename symbol_t::elemental_vector_t basis_t;
       typedef typename symbol_t::semantic_vector_t vector_t;
       
-      // allocator for symbol
+      // allocator for symbol_t
       
       typedef bip::allocator<symbol_t, segment_manager_t> symbol_allocator_t;
       
@@ -156,16 +157,8 @@ namespace sdm {
       /////////////////////////////////////
       
       typedef std::pair<typename symbol_table_t::iterator, bool> inserted_t;
-      
-      /// attempt to insert symbol into index ... may deprecate this i/f
-      /*
-      inline inserted_t
-      insert(const std::string& k,
-             const std::vector<unsigned>& fp,
-             const typename symbol::type ty = symbol::type::normal) {
-        return index->insert(symbol(k.c_str(), fp, allocator, ty));
-      }
-      */
+
+      // XXX rather than boost::optional we could return reference and a status
       
       /// attempt to construct and insert named symbol into index
       
@@ -218,7 +211,13 @@ namespace sdm {
         symbol_by_index& symbols = index->template get<2>(); 
         return symbols[i]; 
       }
+
+      /// more useful
       
+      inline const symbol& symbol_at(std::size_t i) {
+         symbol_by_index& symbols = index->template get<2>();
+         return symbols[i];
+      }
 
       ////////////////////////////
       /// lookup symbol by name //
@@ -243,7 +242,7 @@ namespace sdm {
         bump_reference(void) {
         }
         void operator() (symbol& s) {
-          s._instance++;
+          s._refcount++;
         }
       };
         
@@ -259,7 +258,7 @@ namespace sdm {
         typename symbol_by_name::iterator i = name_idx.find(shared_string(k));
         if (i == name_idx.end()) return boost::none;
         symbol& s = const_cast<symbol&>(*i);
-        if (refcount) s._instance++;
+        if (refcount) s._refcount++;
         return s;
       }
 
