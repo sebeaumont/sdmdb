@@ -17,7 +17,7 @@
 #include <boost/optional.hpp>
 #include <boost/optional/optional_io.hpp>
 
-// we are really developing this
+// XXX 
 #include "../rtl/manifold.hpp"
 
 
@@ -162,7 +162,8 @@ int main(int argc, const char** argv) {
   // see if we can find space names
   std::vector<std::string> spaces = rts.get_named_spaces();
   for (auto sn: spaces) {
-    std::cout << sn << " #" << rts.get_space_cardinality(sn) << std::endl;
+    auto card = rts.get_space_cardinality(sn);
+    std::cout << sn << " #" << card.second << std::endl;
   }
   
   // main command loop
@@ -230,7 +231,22 @@ int main(int argc, const char** argv) {
 
         
       } else if (boost::iequals(cv[0], ">")) {
-        ; // TODO NEXT dump vectors for a space or symbol
+
+        // XX under development
+        manifold::topology_t topo;
+        auto r = rts.get_space_cardinality(cv[1]);
+        
+        if (!sdm_error(r.first)) {
+          topo.reserve(r.second);
+          timer t;
+          status_t sts = rts.get_topology(cv[1], r.second, topo);
+          std::cout << t << "(" << sts << ")" << topo.size() << "/" << r.second << std::endl;
+          // TODO NEXT dump vectors to a file or matrix 
+
+        } else {
+          std::cout << "error: " << r.first << " for space: " << cv[1] << std::endl;
+        }
+
       
         
       } else if (boost::iequals(cv[0], "-")) {
@@ -308,9 +324,11 @@ int main(int argc, const char** argv) {
       if (parse_symbol(cv[0], default_space, sym)) {
           timer t;
           auto ip = rts.prefix_search(sym.front(), sym.back());
+          
           std::cout << t << std::endl;
-          if (ip) std::copy((*ip).first, (*ip).second,
-                            std::ostream_iterator<database::space::symbol>(std::cout, "\n"));
+          if (!sdm_error(ip.first))
+            std::copy(ip.second.first, ip.second.second,
+                      std::ostream_iterator<database::space::symbol>(std::cout, "\n"));
           else std::cout << sym.front() << ":" << sym.back() << " not found" << std::endl;
         }
     }

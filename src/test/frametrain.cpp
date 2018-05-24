@@ -186,8 +186,10 @@ int main(int argc, const char** argv) {
     cout << "existing spaces in image:" << endl;
     // see if we can find space names
     std::vector<std::string> spaces = db.get_named_spaces();
+    
     for (auto sn: spaces) {
-      std::cout << sn << " #" << db.get_space_cardinality(sn) << std::endl;
+      auto ret = db.get_space_cardinality(sn);
+      std::cout << sn << " #" << ret.second << std::endl;
     }
   }
   
@@ -252,9 +254,18 @@ int main(int argc, const char** argv) {
   }
  
   // goodbye from me and goodbye from him...
-  cout << "at end of input rows: " << rows << " frames: " << frames << " empty frames: " << empty << endl;
-  if (cotrain) cout << termspace << " #" << db.get_space_cardinality(termspace) << endl;
-  if (reverse_index) cout << framespace << " #" << db.get_space_cardinality(framespace) << endl;
+  cout << "at end of input rows: " << rows
+       << " frames: " << frames
+       << " empty frames: " << empty << endl;
+  
+  if (cotrain) cout << termspace
+                    << " #"
+                    << db.get_space_cardinality(termspace).second << endl;
+
+  if (reverse_index) cout << framespace
+                          << " #"
+                          << db.get_space_cardinality(framespace).second << endl;
+  
   cout << (db.check_heap_sanity() ? ":-)" : ":-(") << " free: " << B2MB(db.free_heap()) << endl;
   
   return 0;

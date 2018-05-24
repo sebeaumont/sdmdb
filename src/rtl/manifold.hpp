@@ -24,8 +24,9 @@ namespace sdm {
                       const std::size_t max_size,
                       const std::string& filepath,
                       const bool compact=false);
-    
-    status_t get_topology(const std::string&, topology_t&); 
+
+    // get vectors for a space
+    status_t get_topology(const std::string&, std::size_t, topology_t&); 
     
   private:
     //database& _database;

@@ -59,11 +59,11 @@ BOOST_AUTO_TEST_CASE(rtl_api) {
   // get cardinality of space
   auto card = db.get_space_cardinality("names");
   
-  BOOST_REQUIRE(card);
-  BOOST_CHECK_EQUAL(*card, 6);
+  BOOST_REQUIRE(!sdm_error(card.first));
+  BOOST_CHECK_EQUAL(card.second, 6);
 
   manifold::topology_t t;
-  status_t sts = db.get_topology("names", t);
+  status_t sts = db.get_topology("names", card.second, t);
   BOOST_REQUIRE(!sdm_error(sts));
 
   BOOST_REQUIRE(t.size() == 6);

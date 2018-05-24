@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_CASE(rts_load_vectors) {
   
   std::string fline;
   int loaded = 0;
-  int onlyload = 100000;
+  int onlyload = 10000;
   
   while(std::getline(ins, fline) && loaded < onlyload) {
     boost::trim(fline);
@@ -59,14 +59,14 @@ BOOST_AUTO_TEST_CASE(rts_load_vectors) {
   // get cardinality of space
   auto card = rts.get_space_cardinality(test_space1);
   
-  BOOST_REQUIRE(card);
-  BOOST_CHECK_EQUAL(*card, loaded);
+  BOOST_REQUIRE(!sdm_error(card.first));
+  BOOST_CHECK_EQUAL(card.second, loaded);
   
   BOOST_TEST_MESSAGE("loaded: " << loaded << " will now prefix search (all)");
   
   // lookup all vectors
   auto sit = rts.prefix_search(test_space1, "");
-  if (sit) for (auto it = sit->first; it != sit->second; ++it) {
+  if (!sdm_error(sit.first)) for (auto it = sit.second.first; it != sit.second.second; ++it) {
     //std::cout << *it << std::endl;
     loaded--;
   }
@@ -78,13 +78,13 @@ BOOST_AUTO_TEST_CASE(rts_load_vectors) {
 BOOST_AUTO_TEST_CASE(rts_search_empty_space) {
 
   auto card = rts.get_space_cardinality(test_space1);
-  if (card) BOOST_TEST_MESSAGE(test_space1 << " #" << *card);
+  if (!sdm_error(card.first)) BOOST_TEST_MESSAGE(test_space1 << " #" << card.second);
   else BOOST_TEST_MESSAGE("cardinality: " << test_space1 << " no space found!");
   
   int found = 0;
   // lookup all vectors
   auto sit = rts.prefix_search(test_space1, "");
-  if (sit) for (auto it = sit->first; it != sit->second; ++it) {
+  if (!sdm_error(sit.first)) for (auto it = sit.second.first; it != sit.second.second; ++it) {
     //std::cout << *it << std::endl;
     found++;
   }
