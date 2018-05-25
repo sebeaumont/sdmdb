@@ -6,11 +6,13 @@
 namespace sdm {
 
   namespace mms {
-  
-    ///
+    
+    //////////////////////////////////////////////////////////////////////
     /// symbol - named vector with lazily computed elemental fingerprint
-    ///
-
+    ///          and persistent storage for semantic vector this is the 
+    ///          learning and measurement abstraction
+    //////////////////////////////////////////////////////////////////////
+    
     template <typename segment_manager_t, typename shared_string_t, typename allocator_t>
   
     struct symbol final {
@@ -76,8 +78,10 @@ namespace sdm {
         return os;
       }
 
+      ///////////////////////////////////////////////////////
       /// SDM bitvector/semantic_vector delegated properties
-        
+      ///////////////////////////////////////////////////////
+      
       inline const std::size_t count() {
         return _vector.count();
       }
