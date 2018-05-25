@@ -186,8 +186,18 @@ int main(int argc, const char** argv) {
       // assume we have a command and at least one argument
       
       // dispatch command
+      if (boost::iequals(cv[0], "|")) {
 
-      if (boost::iequals(cv[0], "=")) {
+        std::list<std::string> sym;
+        
+        if (parse_symbol(cv[1], default_space, sym)) {
+          timer t;
+          auto r = rts.density(sym.front(), sym.back());
+          std::cout << t << r.second << " (" << r.first << ")" << std::endl;
+        }        
+
+        
+      } else if (boost::iequals(cv[0], "=")) {
 
         std::list<std::string> sym;
         

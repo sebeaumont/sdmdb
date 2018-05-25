@@ -79,21 +79,13 @@ namespace sdm {
       /// SDM bitvector/semantic_vector delegated properties
         
       inline const std::size_t count() {
-        std::size_t count = 0;
-        for (unsigned i=0; i < n_elements; ++i) {
-          #if VELEMENT_64
-          count += __builtin_popcountll(_vector[i]);
-          #else
-          count += __builtin_popcount(_vector[i]);
-          #endif
-        }  
-        return count;
+        return _vector.count();
       }
 
       /// semantic density
       
       inline const double density() {
-        return (double) count() / dimensions;
+        return _vector.density();
       }
         
       /////////////////////////////////////////// 
@@ -103,90 +95,33 @@ namespace sdm {
       /// semantic distance is the Hamming distance
       
       inline const std::size_t distance(const symbol& v) {
-        std::size_t distance = 0;
-        #pragma unroll
-        #pragma clang loop vectorize(enable) interleave(enable)
-        for (unsigned i=0; i < n_elements; ++i) {
-          element_t r = _vector[i] ^ v._vector[i];
-          #ifdef VELEMENT_64
-          distance += __builtin_popcountll(r);
-          #else
-          distance += __builtin_popcount(r);
-          #endif
-        }
-        return distance;
+        return _vector.distance(v._vector);
       }
     
       /// inner product is the commonality/overlap
       
       inline const std::size_t inner(const symbol& v) {
-        std::size_t count = 0;
-        #pragma unroll
-        #pragma clang loop vectorize(enable) interleave(enable)
-        for (unsigned i=0; i < n_elements; ++i) {
-          element_t r = _vector[i] & v._vector[i];
-          #ifdef VELEMENT_64
-          count += __builtin_popcountll(r);
-          #else
-          count += __builtin_popcount(r);
-          #endif
-        }
-        return count;
+        return _vector.distance(v._vector);
       }
       
       /// semantic union
       
       inline std::size_t countsum(const symbol& v) {
-        std::size_t count = 0;
-        #pragma unroll
-        #pragma clang loop vectorize(enable) interleave(enable)
-        for (unsigned i=0; i < n_elements; ++i) {
-          element_t r = _vector[i] | v._vector[i];
-          #ifdef VELEMENT_64
-          count += __builtin_popcountll(r);
-          #else
-          count += __builtin_popcount(r);
-          #endif
-        }
-        return count;
+        return _vector.countsum(v._vector);
       }
     
       /// semantic similarity
       
       inline double similarity(const symbol& v) {
-        // inverse of the normalized distance
-        return 1.0 - (double) distance(v)/dimensions;
+        return _vector.similarity(v._vector);
       }
-    
     
       /// semantic overlap
       
       inline double overlap(const symbol& v) {
-        // ratio of common bits to max common
-        return (double) inner(v)/dimensions;
+        return _vector.overlap(v._vector);
       }
     
-    
-      ////////////////////////////////////////////////
-      /// in place transactions on semantic vectors //
-      ////////////////////////////////////////////////
-    
-    
-      /* set all bits */
-    
-      inline void ones(void) {
-        for (unsigned i=0; i < n_elements; ++i) {
-          _vector[i] = -1;
-        }
-      }
-    
-      /* clear all bits */
-    
-      inline void zeros(void) {
-        for (unsigned i=0; i < n_elements; ++i) {
-          _vector[i] = 0;
-        }
-      }
 
       /////////////////////////
       /// learning utilities //
