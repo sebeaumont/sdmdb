@@ -3,6 +3,8 @@
 #include <boost/interprocess/allocators/allocator.hpp>
 #include <boost/interprocess/containers/vector.hpp>
 #include "../rtl/sdmconfig.h"
+#include "bitvector.hpp"
+
 
 namespace sdm {
   namespace mms {
@@ -15,14 +17,25 @@ namespace sdm {
     template <typename segment_manager_t,
               typename element_t,
               unsigned n_elements>
+
     
     struct semantic_vector
-      : public bip::vector<element_t, bip::allocator<element_t, segment_manager_t>> {
+      : public bitvector<element_t,
+                         n_elements,
+                         bip::vector<element_t, bip::allocator<element_t, segment_manager_t>>,
+                         bip::allocator<void, segment_manager_t>> {
+      //: public bip::vector<element_t, bip::allocator<element_t, segment_manager_t>> {
 
       typedef typename bip::allocator<void, segment_manager_t> void_allocator_t;
       
-      typedef bip::vector<element_t, bip::allocator<element_t, segment_manager_t>> vector_base_t;
-            
+      // typedef bip::vector<element_t, bip::allocator<element_t, segment_manager_t>> vector_base_t;
+
+      typedef bitvector<element_t,
+                        n_elements,
+                        bip::vector<element_t, bip::allocator<element_t, segment_manager_t>>,
+                        bip::allocator<void, segment_manager_t>> vector_base_t;
+
+      
       /// construct fully
       semantic_vector(const void_allocator_t& a) : vector_base_t(a) {
         this->reserve(n_elements);

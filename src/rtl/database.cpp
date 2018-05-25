@@ -67,12 +67,15 @@ namespace sdm {
   
   /// find symbols by prefix
   
-  boost::optional<database::symbol_list>
+  std::pair<status_t, database::symbol_list>
   database::prefix_search(const std::string& sn,
                           const std::string& vp) noexcept {
     auto sp = get_space_by_name(sn);
-    if (sp) return sp->search(vp);
-    else return boost::none;
+    if (sp) return std::make_pair(AOK, sp->search(vp));
+    else {
+      database::space::symbol_iterator a, b;
+      return std::make_pair(ESPACE, std::make_pair(a, b));
+    }
   }
   
   
@@ -281,11 +284,11 @@ namespace sdm {
 
   /// return cardinality of a space
     
-  boost::optional<std::size_t>
+  std::pair<status_t, std::size_t>
   database::get_space_cardinality(const std::string& sn) noexcept {
     auto sp = get_space_by_name(sn);
-    if (sp) return sp->entries();
-    else return boost::none;
+    if (sp) return std::make_pair(AOK, sp->entries());
+    else return std::make_pair(ESPACE, 0);
   }
   
   // XXX inline allocators refactoring 

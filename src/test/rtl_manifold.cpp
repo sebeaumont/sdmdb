@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_CASE(rts_get_topology) {
   
   std::string fline;
   int loaded = 0;
-  int onlyload = 100000;
+  int onlyload = 10000;
   
   while(std::getline(ins, fline) && loaded < onlyload) {
     boost::trim(fline);
@@ -57,13 +57,20 @@ BOOST_AUTO_TEST_CASE(rts_get_topology) {
   // get cardinality of space
   auto card = rts.get_space_cardinality(test_space1);
   
-  BOOST_REQUIRE(card);
-  BOOST_CHECK_EQUAL(*card, loaded);
+  BOOST_REQUIRE(!sdm_error(card.first));
+  BOOST_CHECK_EQUAL(card.second, loaded);
 
   manifold::topology_t t;
-  status_t sts = rts.get_topology(test_space1, t);
+  // some changes on allocation here we will expect caller to allocate
+  // space but we will take a limit on vector caridnality for security.
+  // also overload this method to a buffer (aliged pointer to an element_t not void*)
+  // this will ease of cffi
+  t.reserve(card.second);
+  status_t sts = rts.get_topology(test_space1, card.second, t);
   BOOST_CHECK_EQUAL(sts, AOK);
-
+  
+  // actually might not be true in the wild if something changed in the space 
+  BOOST_CHECK_EQUAL(card.second, t.size());
 }
 
 

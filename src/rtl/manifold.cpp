@@ -10,15 +10,19 @@ namespace sdm {
     : database::database(size, max, image, compact) {}
 
   
-  status_t manifold::get_topology(const std::string& space, topology_t& topo) {
+  status_t manifold::get_topology(const std::string& space, std::size_t n, topology_t& topo) {
     // step 1 get the space 
     database::space* sp = get_space_by_name(space);
     if (!sp) return ESPACE; // space not found
+
+    // just in case the caller asked for more than there is or indeed
+    // the world changed in the meantime.
+    
     std::size_t card = sp->entries();
     // allocate a topo which is just the vectors in the space
-    topo.reserve(card);
+    //topo.reserve(card);
     // now copy the symbols_spaces vectors from the space into caller
-    for (std::size_t i = 0; i < card; ++i) {
+    for (std::size_t i = 0; i < card && i < n; ++i) {
       auto s = sp->symbol_at(i);
       auto v = s.vector();
       vector_t b;

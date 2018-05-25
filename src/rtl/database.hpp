@@ -68,7 +68,7 @@ namespace sdm {
     typedef std::pair<database::space::symbol_iterator,
                       database::space::symbol_iterator> symbol_list;
     
-    boost::optional<symbol_list>
+    std::pair<status_t, symbol_list>
     prefix_search(const std::string& space_name,
                   const std::string& symbol_prefix) noexcept;
     
@@ -120,9 +120,9 @@ namespace sdm {
     
     
     
-    ////////////////////////
-    /// vector measurement
-    ////////////////////////
+    /////////////////////////
+    /// vector measurement //
+    /////////////////////////
     
     /// simlilarity (unit distance)
 
@@ -147,7 +147,7 @@ namespace sdm {
     std::vector<std::string>
     get_named_spaces() noexcept;
     
-    boost::optional<std::size_t>
+    std::pair<status_t, std::size_t>
     get_space_cardinality(const std::string&) noexcept;
 
     ///////////////////
@@ -176,7 +176,7 @@ namespace sdm {
                   const std::string&,
                   const space::symbol::type);
 
-    /// get space
+    /// get space max performance -- 
     //inline space* get_space_by_name(const std::string&) noexcept;     
     inline space* get_space_by_name(const std::string& name) noexcept {
       auto it = spaces.find(name);
