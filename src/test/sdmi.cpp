@@ -18,7 +18,7 @@
 #include <boost/optional/optional_io.hpp>
 
 // XXX 
-#include "../rtl/manifold.hpp"
+#include "../rtl/database.hpp"
 
 
 // a wall clock timer with microsecond resolution
@@ -157,7 +157,7 @@ int main(int argc, const char** argv) {
   
   // create space manifold - database+
  
-  manifold rts(initial_size * 1024 * 1024, maximum_size * 1024 * 1024, heapfile); 
+  database rts(heapfile, initial_size * 1024 * 1024, maximum_size * 1024 * 1024); 
 
   // see if we can find space names
   std::vector<std::string> spaces = rts.get_named_spaces();

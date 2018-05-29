@@ -7,7 +7,8 @@
 #define BOOST_TEST_MODULE manifold_api
 #include <boost/test/included/unit_test.hpp>
 
-#include "rtl/manifold.hpp"
+// need database api to add data
+#include "rtl/database.hpp"
 
 using namespace sdm;
 
@@ -21,8 +22,8 @@ const std::string test_lexicon = "/usr/share/dict/words";
 
 // create and destroy manifold 
 struct manifold_setup {
-  manifold db;
-  manifold_setup () : db(ini_size, max_size, image) {
+  database db;
+  manifold_setup () : db(image, ini_size, max_size) {
     BOOST_TEST_MESSAGE("setup manifold");
   }
   ~manifold_setup () {

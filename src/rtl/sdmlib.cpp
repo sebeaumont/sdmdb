@@ -18,7 +18,7 @@ const status_t sdm_database(const char* filename,
                             size_t maxsize,
                             database_t* db) {
   try {
-    *db = new database(size, maxsize, std::string(filename));
+    *db = new database(std::string(filename), size, maxsize);
     return AOK;
   } catch (const std::exception& e) {
     fprintf(stderr, "SDMLIB: %s (sdm_database %s %lu %lu)\n",

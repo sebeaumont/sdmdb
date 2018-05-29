@@ -177,7 +177,7 @@ int main(int argc, const char** argv) {
   cout << "============================================="         << endl;
 
   // create database with requirement
-  database db(initial_size * 1024 * 1024, maximum_size * 1024 * 1024, heapfile);
+  database db(heapfile, initial_size * 1024 * 1024, maximum_size * 1024 * 1024);
   
   // print out all the existing spaces and cardinalities
   vector<string> spaces = db.get_named_spaces();

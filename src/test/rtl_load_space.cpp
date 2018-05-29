@@ -22,7 +22,7 @@ const std::string test_space1 = "TESTSPACE";
 // create and destroy rts
 struct database_setup {
   database rts;
-  database_setup () : rts(ini_size, max_size, image) {
+  database_setup () : rts(image, ini_size, max_size) {
     BOOST_TEST_MESSAGE("setup database");
   }
   ~database_setup () {
