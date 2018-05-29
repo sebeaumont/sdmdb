@@ -27,7 +27,7 @@ namespace sdm {
   class database : public manifold {
 
     /// memory manager for spaces within the database
-    typedef bip::managed_mapped_file segment_t;
+    //typedef bip::managed_mapped_file segment_t;
     
   public:
 
