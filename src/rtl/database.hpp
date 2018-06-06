@@ -10,6 +10,7 @@
 #include "../mms/symbol_space.hpp"
 #include "../util/fast_random.hpp"
 
+#include "config.h"
 
 #include "sdmconfig.h"
 #include "sdmstatus.h"
@@ -27,7 +28,6 @@ namespace sdm {
   class database : public manifold {
 
     /// memory manager for spaces within the database
-    //typedef bip::managed_mapped_file segment_t;
     
   public:
 

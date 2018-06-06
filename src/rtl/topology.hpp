@@ -2,6 +2,8 @@
 #include "database.hpp"
 #include "../mms/bitvector.hpp"
 
+// old toppology/geometry search code
+
 namespace sdm {
   namespace rtl {
 

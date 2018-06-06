@@ -4,6 +4,9 @@
 
 include_directories(..)
 
+# this for generated: config.h
+include_directories (${CMAKE_BINARY_DIR})
+
 # header only boost
 find_package(Boost REQUIRED) 
 include_directories (${Boost_INCLUDE_DIR})
@@ -11,6 +14,10 @@ include_directories (${Boost_INCLUDE_DIR})
 # header only cereal
 #find_package(Cereal REQUIRED)
 #include_directories (${Cereal_INCLUDE_DIRS})
+
+# eigen
+find_package(Eigen3 REQUIRED)
+include_directories(${EIGEN3_INCLUDE_DIR})
 
 
 # c library: cshim + database
@@ -31,4 +38,5 @@ set_target_properties(sdmdb PROPERTIES
 # install lib and headers
 install (TARGETS sdm LIBRARY DESTINATION lib)
 install (TARGETS sdmdb LIBRARY DESTINATION lib)
+# review this 
 install (FILES sdmlib.h sdmconfig.h sdmstatus.h DESTINATION include)

@@ -1,5 +1,13 @@
-# test programs for rtl
+# programs for test and utilities
+
 include_directories(..)
+
+include_directories (${CMAKE_BINARY_DIR})
+
+# eigen
+find_package(Eigen3 REQUIRED)
+include_directories(${EIGEN3_INCLUDE_DIR})
+
 
 find_package(Boost REQUIRED)
 find_package(Boost REQUIRED COMPONENTS program_options)

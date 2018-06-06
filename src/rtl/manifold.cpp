@@ -2,9 +2,11 @@
 
 namespace sdm {
 
-  
-  /// the constructor
-  
+  ////////////////////////////////////////////
+  /// construct manifold from read only image
+  ////////////////////////////////////////////
+
+  /// XXX size should be 0 if readonly image mapping required. 
   manifold::manifold(const std::string& mmf, const std::size_t size) :
     heapimage(mmf),
     inisize(size),
@@ -16,8 +18,6 @@ namespace sdm {
   }
   
 
-
-  
   //////////////////////////////////////////////
   /// Read only operations on manifold spaces //
   //////////////////////////////////////////////
@@ -107,32 +107,114 @@ namespace sdm {
     return std::make_pair(AOLD, target_sym->overlap(*source_sym));
   }
 
-  //////////////////////////////////////////
-  /// under construction -- new topo scheme
   
-  status_t manifold::get_topology(const std::string& space, std::size_t n, topology_t& topo) {
+  //////////////////////////
+  /// under construction
+  //////////////////////////
+  
+  status_t manifold::get_geometry(const std::string& space, std::size_t n, geometry_t g) {
     // step 1 get the space 
     manifold::space* sp = get_space_by_name(space);
     if (!sp) return ESPACE; // space not found
 
-    // just in case the caller asked for more than there is or indeed
-    // the world changed in the meantime.
-    
+    // obtain current cardinality of the space in case it is smaller than n!
     std::size_t card = sp->entries();
+    
+
+    // step 2 get vectors from database into an homogenous array allocated by caller
+
+    // step 3 if required compute density of vectors and filter by upper and lower bound.
+    // xxx this would require a sparse ids and/or caching more of the symbol data also
+    
     // allocate a topo which is just the vectors in the space
-    //topo.reserve(card);
+    // topo.reserve(card); xxx callers responsibility?
     // now copy the symbols_spaces vectors from the space into caller
-    for (std::size_t i = 0; i < card && i < n; ++i) {
+    // N.B. this could be paralellised if we indexed the target topo array
+    
+    // safety first
+    std::size_t m = card < n ? card : n;
+    //g.resize(m);
+
+    /*
+    #if HAVE_DISPATCH
+    //dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
+    //auto queue = dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0);
+    // xxx turns out this is much slower than uni threaded version!
+    dispatch_apply(m, DISPATCH_APPLY_AUTO, ^(std::size_t i) {
+        //dispatch_apply(m, queue, ^(std::size_t i) {
+        auto s = sp->symbol_at(i);
+        auto v = s.vector();
+        vector_t b;
+        // stack copy of vector... 
+        v.copyto(b.data());
+        g[i] = b;
+      });
+    
+    #elif HAVE_OPENMP
+    #pragma omp parallel for 
+    for (std::size_t i=0; i < m; ++i) {
       auto s = sp->symbol_at(i);
       auto v = s.vector();
       vector_t b;
-      // manual copy of vector yetch...
-      #pragma unroll
-      for (std::size_t j = 0; j < SDM_VECTOR_ELEMS; ++j)  b[j] = v[j];
-      topo.push_back(b);
+      // stack copy of vector... 
+      v.copyto(b.data());
+      g[i] = b;      
     }
+    */
+
+    for (std::size_t i = 0; i < m; ++i) {
+      auto s = sp->symbol_at(i);
+      auto v = s.vector();
+      // stack copy of vector... 
+      v.copyto(g[i]);
+    }
+
     return AOK;
   }
+
+
+  // basic vector retrieval
+
+  /// get vector data
+  status_t
+  manifold::load_vector(const std::string& space,
+                        const std::string& name,
+                        vector_t vector) {
+    // get space
+    auto sp = get_space_by_name(space);
+    if (!sp) return ESPACE; // space not found
+    auto sym = sp->get_mutable_symbol_by_name(name);
+    if (!sym) return ESYMBOL;
+    auto v = sym->vector();
+    v.copyto(vector);
+    return AOK;
+  }
+
+  status_t
+  manifold::load_element(const std::string& space,
+                         const std::string& name,
+                         sparse_t fp) {
+    return EUNIMPLEMENTED;
+  }
+
+  
+  /// try doing some metrics
+  
+  status_t
+  manifold::get_topology(const std::string& targetspace,
+                         const vector_t& vector,
+                         const std::size_t cub,
+                         const metric_t metric,
+                         const double dlb,
+                         const double dub,
+                         const double mlb,
+                         const double mub,
+                         topology_t& top) {
+    //
+    return EUNIMPLEMENTED;
+  }
+  
+  
 
   
   /// return cardinality of a space
@@ -214,5 +296,12 @@ namespace sdm {
       return std::make_pair(AOLD, it->second);
     }
   }
+
+  // XXX TODO read thru toppology cache
+  /*
+  status_t ensure_toppology(const std::string& name) {
+    
+  }
+  */
   
 }

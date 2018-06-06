@@ -44,6 +44,12 @@ namespace sdm {
         for (unsigned i = 0; i < n_elements; ++i) this->push_back(0);
       }
 
+      /// copy vector to aligned destination with no bounds checks
+      // TODO: benchmark this against bounded and unrolled loop
+      inline void copyto(element_t* dst) {
+        std::memcpy(dst, this->data(), n_elements * sizeof(element_t));
+      }
+      
     };
   }
 }

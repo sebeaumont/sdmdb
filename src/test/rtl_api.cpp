@@ -63,11 +63,9 @@ BOOST_AUTO_TEST_CASE(rtl_api) {
   BOOST_REQUIRE(!sdm_error(card.first));
   BOOST_CHECK_EQUAL(card.second, 6);
 
-  manifold::topology_t t;
-  status_t sts = db.get_topology("names", card.second, t);
+  manifold::vector_t t[card.second];
+  status_t sts = db.get_geometry("names", card.second, t);
   BOOST_REQUIRE(!sdm_error(sts));
-
-  BOOST_REQUIRE(t.size() == 6);
 
   // ...
   

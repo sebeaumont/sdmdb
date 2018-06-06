@@ -5,7 +5,7 @@
  * This is the fundamental config file for compile time (baked in)
  * SDM implementation constants. DO NOT EXCEED THESE BOUNDS.
  *
- * TODO: buid config of these vars
+ * TODO: cmake config of these vars
  */
 
 #define SDM_VECTOR_ELEMENT_TYPE unsigned long long 
