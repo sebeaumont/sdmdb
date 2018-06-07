@@ -51,7 +51,7 @@ namespace sdm {
   const sdm_status_t
   database::namedvector(const std::string& sn,
                         const std::string& vn,
-                        const space::symbol::type ty) noexcept {
+                        const sdm_symbol_t ty) noexcept {
 
     auto symp = ensure_symbol(sn, vn, ty);
     return symp.first;
@@ -196,7 +196,7 @@ namespace sdm {
   inline std::pair<sdm_status_t, const database::space::symbol*>
   database::ensure_symbol(const std::string& spacename,
                           const std::string& name,
-                          const space::symbol::type type) {
+                          const sdm_symbol_t type) {
 
     auto sp = ensure_space_by_name(spacename);
     if (sdm_error(sp.first)) return std::make_pair(sp.first, nullptr);

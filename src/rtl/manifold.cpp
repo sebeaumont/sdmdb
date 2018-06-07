@@ -191,9 +191,9 @@ namespace sdm {
   }
 
   sdm_status_t
-  manifold::load_element(const std::string& space,
-                         const std::string& name,
-                         sparse_t fp) {
+  manifold::load_elemental(const std::string& space,
+                           const std::string& name,
+                           sdm_sparse_t fp) {
     return EUNIMPLEMENTED;
   }
 
@@ -203,18 +203,31 @@ namespace sdm {
   sdm_status_t
   manifold::get_topology(const std::string& targetspace,
                          const sdm_vector_t& vector,
-                         const std::size_t cub,
-                         const metric_t metric,
+                         const sdm_size_t cub,
+                         const sdm_metric_t metric,
                          const double dlb,
                          const double dub,
                          const double mlb,
                          const double mub,
-                         topology_t& top) {
+                         sdm_topology_t& top) {
     //
     return EUNIMPLEMENTED;
   }
   
   
+
+  /*
+    XXX 
+    TODO check this if this is fixed
+    as had weird behaviour -- hangs or throws assersion errors
+    so I'm doing a workaround and cache all spaces at rts start up via ensure space_by_name
+    probably be quicker...
+    
+    std::pair<manifold::space*, std::size_t>
+    manifold::get_space_by_name(const std::string& name) {
+    return heap.find<space>(name.c_str());
+    }
+  */
 
   
   /// return cardinality of a space
@@ -226,23 +239,7 @@ namespace sdm {
     else return std::make_pair(ESPACE, 0);
   }
 
-  // lookup a space by name
-
-  /*
-    XXX 
-    TODO check this if this is fixed
-    this has weird behaviour -- hangs or throws assersion errors
-    so I'm doing a workaround and cache all spaces at rts start up via ensure space_by_name
-    probably be quicker...
-    
-    std::pair<manifold::space*, std::size_t>
-    manifold::get_space_by_name(const std::string& name) {
-    return heap.find<space>(name.c_str());
-    }
-  */
   
-  // this is meant to be fast so no optional's here
-  // XX might change i/f to return a status pair
 
   /// lookup all spaces in the heap/segment manager
   
@@ -266,7 +263,8 @@ namespace sdm {
     return names;
   }
 
-  
+
+  // XXX manifold is meant to be readonly so this cant be here!
   // create and manage named symbols by name -- space constructor does find_or_construct on segment
   // then database memoizes pointers to spaces to speed up symbol resolution
   
@@ -287,7 +285,7 @@ namespace sdm {
         return std::make_pair(ANEW, sp);
         
       } catch (boost::interprocess::bad_alloc& e) {
-        // try and expand memory and retry  or... 
+        // try and expand memory and retry  or...
         return std::make_pair(EMEMORY, nullptr);
       }
       

@@ -62,7 +62,7 @@ namespace sdm {
     namedvector(const std::string& space_name,
                 const std::string& symbol_name,
                 // XX to do change type to a double p value default to 1
-                const space::symbol::type type = space::symbol::type::normal) noexcept;
+                const sdm_symbol_t type = normal) noexcept;
 
     
     /// add or superpose
@@ -113,12 +113,12 @@ namespace sdm {
     inline std::pair<sdm_status_t, space::symbol&>
     ensure_mutable_symbol(const std::string&,
                           const std::string&,
-                          const space::symbol::type);
+                          const sdm_symbol_t);
 
     inline std::pair<sdm_status_t, const space::symbol*>
     ensure_symbol(const std::string&,
                   const std::string&,
-                  const space::symbol::type);
+                  const sdm_symbol_t);
 
   private:
     

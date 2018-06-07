@@ -1,6 +1,8 @@
 #pragma once
 
 #include "sdmconfig.h"
+#include "../rtl/sdmtypes.h"
+
 #include "semantic_vector.hpp"
 #include "elemental_vector.hpp"
 
@@ -40,11 +42,11 @@ namespace sdm {
       typedef elemental_vector<segment_manager_t, unsigned> elemental_vector_t;
 
       // state
-      enum type { normal, white, pink, brown };
+
 
       shared_string_t _name;
       unsigned _refcount;
-      type _type;
+      sdm_symbol_t _type;
       
     private:
       
@@ -58,7 +60,7 @@ namespace sdm {
       symbol(const char* s,
              const std::vector<unsigned>& f,
              const allocator_t& a,
-             const type t = normal)
+             const sdm_symbol_t t)
         : _name(s, a),
           _refcount(0),
           _type(t),

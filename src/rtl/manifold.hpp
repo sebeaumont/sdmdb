@@ -57,11 +57,7 @@ namespace sdm {
 
     typedef Eigen::Matrix<SDM_VECTOR_ELEMENT_TYPE, SDM_VECTOR_ELEMS, Eigen::Dynamic> matrix_t;
 
-    typedef std::vector<std::pair<std::size_t, double>>  topology_t;
-
-
-
-    typedef std::vector<std::size_t> sparse_t;
+    // not yet typedef std::vector<std::pair<std::size_t, double>>  topology_t;
 
     
     /// constructor for mapped image
@@ -89,27 +85,29 @@ namespace sdm {
                 sdm_vector_t vector);
 
     sdm_status_t
-    load_element(const std::string& space,
-                 const std::string& name,
-                 sparse_t fp);
+    load_elemental(const std::string& space,
+                   const std::string& name,
+                   sdm_sparse_t bits);
     
     /// measure a vector
     
     sdm_status_t
     get_topology(const std::string& targetspace,
                  const sdm_vector_t& vector,
-                 const std::size_t cub,
-                 const metric_t metric,
+                 const sdm_size_t cub,
+                 const sdm_metric_t metric,
                  const double dlb,
                  const double dub,
                  const double mlb,
                  const double mub,
-                 topology_t& top);
+                 sdm_topology_t& top);
       
     /// get vectors for a space
 
     sdm_status_t
-    get_geometry(const std::string&, std::size_t, sdm_geometry_t); 
+    get_geometry(const std::string&,
+                 const sdm_size_t,
+                 sdm_geometry_t); 
     
 
     /// search for symbols starting with prefix
@@ -160,11 +158,12 @@ namespace sdm {
 
   protected:
 
-    /// get space pointer
-    inline space* get_space_by_name(const std::string& name) noexcept {
+    inline space*
+    get_space_by_name(const std::string& name) noexcept {
       auto it = spaces.find(name);
       return (it == spaces.end()) ? nullptr : it->second;
     }
+   
 
     /// access cache of pointers to named spaces to optimize symbol lookup
     std::pair<sdm_status_t, space*> ensure_space_by_name(const std::string&); 

@@ -4,14 +4,48 @@
 #include "sdmconfig.h"
 
 /*
-** SDM C Data types
+** SDMLIB API types
 */
+
+
+/* C++ */
+
+#ifdef __cplusplus
+#define BOOL bool
+typedef std::size_t sdm_size_t;
+
+/* ANSI C */
+#else
+#define BOOL unsigned
+
+/* #include <stdlib.h> language-c cant grok modern c! so we are forced
+   into this hack as we would normally take platform defaults from stdlib.
+   TODO: we might be able to configure a type at build time */
+
+#ifndef size_t
+typedef unsigned long size_t;
+#endif
+
+typedef size_t sdm_size_t;
+#endif
+
+
+/* All of the above */
 
 typedef SDM_VECTOR_ELEMENT_TYPE sdm_vector_t[SDM_VECTOR_ELEMS];
 
 typedef sdm_vector_t sdm_geometry_t [];    
 
-typedef enum {Similarity, Overlap} metric_t;
+typedef unsigned sdm_sparse_t [];
+
+typedef enum { normal, white, pink, brown } sdm_symbol_t;
+
+/* UC */
+typedef struct { char* name; double d; unsigned o; } sdm_point_t;
+
+typedef sdm_point_t sdm_topology_t[];
+
+typedef enum {similarity, overlap} sdm_metric_t;
 
 
 enum sdm_status {
@@ -35,12 +69,6 @@ enum sdm_status {
 
 typedef enum sdm_status sdm_status_t;
 
-
-#ifdef __cplusplus
-#define BOOL bool
-#else
-#define BOOL unsigned
-#endif
 
 inline BOOL sdm_error(sdm_status_t s) { return (s<0); }
 

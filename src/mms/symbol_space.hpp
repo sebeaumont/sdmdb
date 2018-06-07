@@ -165,7 +165,7 @@ namespace sdm {
       inline boost::optional<const symbol&>
       insert_symbol(const std::string& name,
                     const std::vector<unsigned>& basis,
-                    const typename symbol::type ty = symbol::type::normal) {
+                    const sdm_symbol_t ty = normal) {
 
         // construct symbol and try and insert into index
         inserted_t either = index->insert(symbol(name.c_str(), basis, allocator, ty));
@@ -186,7 +186,7 @@ namespace sdm {
       inline boost::optional<symbol&>
       insert_mutable_symbol(const std::string& name,
                             const std::vector<unsigned>& basis,
-                            const typename symbol::type ty = symbol::type::normal) {
+                            const sdm_symbol_t ty = normal) {
 
         // construct symbol and try and insert into index
         inserted_t either = index->insert(symbol(name.c_str(), basis, allocator, ty));
