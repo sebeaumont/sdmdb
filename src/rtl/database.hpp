@@ -6,48 +6,35 @@
 #include <boost/optional.hpp>
 #include <map>
 
+#include "sdmconfig.h"
+#include "sdmtypes.h"
 
+#include "manifold.hpp"
 #include "../mms/symbol_space.hpp"
 #include "../util/fast_random.hpp"
 
-//#include "topology.hpp"
-#include "sdmconfig.h"
-#include "sdmstatus.h"
 
 #include <iostream>
 
 namespace sdm {
 
   namespace bip = boost::interprocess;
-  
+
   /***********************************************************************
    ** Database type provides the API for the SDM implementation
    ***********************************************************************/
   
-  class database {
+  class database : public manifold {
 
     /// memory manager for spaces within the database
-    typedef bip::managed_mapped_file segment_t;
     
   public:
 
-    /////////////////////////////////
-    /// mms symbol_space definition
-    /////////////////////////////////
-
-    /// type of space implementation determines the type and number of elements and sparsity
+    /// constructor to open or create file mapped heap r/w
     
-    typedef mms::symbol_space<SDM_VECTOR_ELEMENT_TYPE,
-                              SDM_VECTOR_ELEMS,
-                              SDM_VECTOR_BASIS_SIZE,
-                              segment_t> space;
-    
-    
-    /// constructor to initialize file mapped heap
-    
-    explicit database(const std::size_t initial_size,
+    explicit database(const std::string& filepath,
+                      const std::size_t initial_size,
                       const std::size_t max_size,
-                      const std::string& filepath,
                       const bool compact=false);
 
     
@@ -62,26 +49,7 @@ namespace sdm {
     /// destructor will cautiously ensure all pages are flushed
     
     ~database();
-
-    /// search for symbols starting with prefix
     
-    typedef std::pair<database::space::symbol_iterator,
-                      database::space::symbol_iterator> symbol_list;
-    
-    std::pair<status_t, symbol_list>
-    prefix_search(const std::string& space_name,
-                  const std::string& symbol_prefix) noexcept;
-    
-    
-    /////////////////////////
-    /// vector properties ///
-    /////////////////////////
-    
-    /// get vector density
-    std::pair<const status_t, const double>
-    density(const std::string& space_name,
-            const std::string& vector_name) noexcept;
-
 
     /////////////////////////////////////////////////////
     /// effectful learning operations on target vectors
@@ -89,9 +57,8 @@ namespace sdm {
 
     
     /// assert a named vector
-
         
-    const status_t
+    const sdm_status_t
     namedvector(const std::string& space_name,
                 const std::string& symbol_name,
                 // XX to do change type to a double p value default to 1
@@ -100,42 +67,25 @@ namespace sdm {
     
     /// add or superpose
     
-    const status_t
+    const sdm_status_t
     superpose(const std::string& ts, const std::string& tn,
               const std::string& ss, const std::string& sn,
               const int shift = 0) noexcept;
 
     /// batch superpose several symbols from source space
 
-    const status_t
+    const sdm_status_t
     superpose(const std::string& ts, const std::string& tn,
               const std::string& ss, const std::vector<const std::string>& sns,
               const std::vector<const int> shifts) noexcept;
     
     /// subtract
 
-    const status_t
+    const sdm_status_t
     subtract(const std::string& ts, const std::string& tn,
              const std::string& ss, const std::string& sn) noexcept;
     
     
-    
-    /////////////////////////
-    /// vector measurement //
-    /////////////////////////
-    
-    /// simlilarity (unit distance)
-
-    const std::pair<const status_t, const double>
-    similarity(const std::string&, const std::string&,
-               const std::string&, const std::string&) noexcept;
-
-    /// inner product (overlap)
-    
-    const std::pair<const status_t, const double>
-    overlap(const std::string&, const std::string&,
-            const std::string&, const std::string&) noexcept;
-
     
     ////////////////////////
     /// space operations ///
@@ -143,12 +93,6 @@ namespace sdm {
     
     bool
     destroy_space(const std::string&) noexcept;
-
-    std::vector<std::string>
-    get_named_spaces() noexcept;
-    
-    std::pair<status_t, std::size_t>
-    get_space_cardinality(const std::string&) noexcept;
 
     ///////////////////
     /// heap metrics //
@@ -164,25 +108,17 @@ namespace sdm {
     /// internal functions typically inlined ///
     ////////////////////////////////////////////
     
-  protected:
+  private:
 
-    inline std::pair<status_t, space::symbol&>
+    inline std::pair<sdm_status_t, space::symbol&>
     ensure_mutable_symbol(const std::string&,
                           const std::string&,
                           const space::symbol::type);
 
-    inline std::pair<status_t, const space::symbol*>
+    inline std::pair<sdm_status_t, const space::symbol*>
     ensure_symbol(const std::string&,
                   const std::string&,
                   const space::symbol::type);
-
-    /// get space max performance -- 
-    //inline space* get_space_by_name(const std::string&) noexcept;     
-    inline space* get_space_by_name(const std::string& name) noexcept {
-      auto it = spaces.find(name);
-      return (it == spaces.end()) ? nullptr : it->second;
-    }
-
 
   private:
     
@@ -193,9 +129,6 @@ namespace sdm {
     bool grow_heap_by(const std::size_t&) noexcept;
     
     bool compactify_heap() noexcept;
-    
-    /// database memoizes pointers to named spaces to optimize symbol lookup
-    std::pair<status_t, space*> ensure_space_by_name(const std::string&); 
     
     /// get randomizer
     inline random::index_randomizer& randomidx(void) { return irand; }
@@ -208,21 +141,14 @@ namespace sdm {
     ////////////////////
 
     // db parameters
-    std::size_t inisize;
     std::size_t maxheap;
-    segment_t heap;
-    const std::string heapimage;
-    const bool compclose;      // compact on close?
+    const bool compclose;
     
     // randomizer init at construction
     random::index_randomizer irand;
 
     // are we trying to grow?
     volatile bool isexpanding;
-
-  protected:
-    // read through space cache
-    std::map<const std::string, space*> spaces; // run time space index
  
   };
 }

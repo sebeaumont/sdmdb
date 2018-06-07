@@ -6,6 +6,7 @@
  ***************************************************************************/
 
 #include <iostream>
+#include <iomanip>
 #include <fstream>
 #include <boost/algorithm/string.hpp>
 #include <boost/date_time/posix_time/ptime.hpp>
@@ -18,7 +19,7 @@
 #include <boost/optional/optional_io.hpp>
 
 // XXX 
-#include "../rtl/manifold.hpp"
+#include "../rtl/database.hpp"
 
 
 // a wall clock timer with microsecond resolution
@@ -39,7 +40,7 @@ public:
 
   // ostream printer
   friend std::ostream& operator<<(std::ostream& os, timer& t) {
-    os << "[" << t.get_elapsed_micros() << "] ";
+    os << "[" << std::dec << std::setw(8) << std::setfill(' ') <<  t.get_elapsed_micros() << "] ";
     return os;
   }
 
@@ -56,6 +57,7 @@ private:
 // tokenzier for input line
 
 void tokenize_command(const std::string& s, std::vector<std::string>& o) {
+
   typedef boost::escaped_list_separator<char> ls_t;
   typedef boost::tokenizer<ls_t> toz_t;
   
@@ -85,9 +87,21 @@ bool parse_symbol(const std::string& s,
   for(toz_t::iterator j = tok.begin(); j != tok.end(); ++j) {
     std::string t(*j);
     boost::trim(t);
+    boost::replace_all(t, "*", ""); // ho hum wild card!
     parsed.push_back(t);
   }
-  if (parsed.size() == 1) parsed.push_front(prefix);
+
+  // XXX
+  //for (auto p : parsed) {
+  //  std::cout << "|" << p << std::endl;
+  //}
+  
+  if (parsed.size() == 1) {
+    // intension is to default the space name as prefix but could be just space
+    parsed.push_front(prefix);
+    return true;
+  }
+  
   if (parsed.size() == 2) return true;
   else {
     std::cout << "cannot parse symbol: " << s << std::endl;
@@ -157,7 +171,7 @@ int main(int argc, const char** argv) {
   
   // create space manifold - database+
  
-  manifold rts(initial_size * 1024 * 1024, maximum_size * 1024 * 1024, heapfile); 
+  database rts(heapfile, initial_size * 1024 * 1024, maximum_size * 1024 * 1024); 
 
   // see if we can find space names
   std::vector<std::string> spaces = rts.get_named_spaces();
@@ -197,13 +211,28 @@ int main(int argc, const char** argv) {
         }        
 
         
+      } else if (boost::iequals(cv[0], "@")) {
+
+        std::list<std::string> sym;
+        
+        if (parse_symbol(cv[1], default_space, sym)) {
+          sdm_vector_t v;
+          timer t;
+          sdm_status_t s = rts.load_vector(sym.front(), sym.back(), v);
+          if (!sdm_error(s))
+            std::cout << t << sizeof(v) << "> " << std::hex << std::setw(16) << std::setfill('0') << v << std::endl;
+          else
+            std::cout << t << s << std::endl;
+        }        
+
+
       } else if (boost::iequals(cv[0], "=")) {
 
         std::list<std::string> sym;
         
         if (parse_symbol(cv[1], default_space, sym)) {
           timer t;
-          status_t s = rts.namedvector(sym.front(), sym.back());
+          sdm_status_t s = rts.namedvector(sym.front(), sym.back());
           std::cout << t << sym.front() << ":" << sym.back() << " (" << s << ")" << std::endl;
         }        
 
@@ -243,14 +272,13 @@ int main(int argc, const char** argv) {
       } else if (boost::iequals(cv[0], ">")) {
 
         // XX under development
-        manifold::topology_t topo;
         auto r = rts.get_space_cardinality(cv[1]);
         
         if (!sdm_error(r.first)) {
-          topo.reserve(r.second);
+          sdm_vector_t geom[r.second];
           timer t;
-          status_t sts = rts.get_topology(cv[1], r.second, topo);
-          std::cout << t << "(" << sts << ")" << topo.size() << "/" << r.second << std::endl;
+          sdm_status_t sts = rts.get_geometry(cv[1], r.second, geom);
+          std::cout << t << "(" << sts << ")" << r.second << std::endl;
           // TODO NEXT dump vectors to a file or matrix 
 
         } else {

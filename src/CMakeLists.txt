@@ -7,9 +7,14 @@ project(sdmlib)
 cmake_minimum_required (VERSION 3.0)
 enable_testing()
 
-#####################
-# project versioning
-#####################
+##############################
+# versioning and cofiguration
+##############################
+
+set (HAVE_OPENMP 0)
+set (HAVE_DISPATCH 0)
+
+# versioning
 
 file(READ ../VERSION SDM_VERSION)
 
@@ -34,7 +39,6 @@ set (CMAKE_INSTALL_PREFIX "/usr/local/sdm")
 
 set (CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 set (CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
-
 
 #########################################
 # project global c/c++ compiler settings
@@ -137,7 +141,8 @@ endif()
 message(${CMAKE_CXX_FLAGS})
 message(${CMAKE_C_FLAGS})
 
-
+# generate build time header configuration
+configure_file(sdmconfig.h.in sdmconfig.h)
 
 ##################
 # runtime library

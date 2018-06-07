@@ -7,7 +7,8 @@
 #define BOOST_TEST_MODULE manifold_api
 #include <boost/test/included/unit_test.hpp>
 
-#include "rtl/manifold.hpp"
+// need database api to add data
+#include "rtl/database.hpp"
 
 using namespace sdm;
 
@@ -21,8 +22,8 @@ const std::string test_lexicon = "/usr/share/dict/words";
 
 // create and destroy manifold 
 struct manifold_setup {
-  manifold db;
-  manifold_setup () : db(ini_size, max_size, image) {
+  database db;
+  manifold_setup () : db(image, ini_size, max_size) {
     BOOST_TEST_MESSAGE("setup manifold");
   }
   ~manifold_setup () {
@@ -38,7 +39,7 @@ BOOST_FIXTURE_TEST_SUITE(manifold_api, manifold_setup)
 
 BOOST_AUTO_TEST_CASE(rtl_api) {
 
-  status_t s = db.superpose("names","Simon","names","Beaumont");
+  sdm_status_t s = db.superpose("names","Simon","names","Beaumont");
   BOOST_REQUIRE(!sdm_error(s));
   s = db.superpose("names","Beaumont","names","Simon");
   BOOST_REQUIRE(!sdm_error(s));
@@ -62,11 +63,9 @@ BOOST_AUTO_TEST_CASE(rtl_api) {
   BOOST_REQUIRE(!sdm_error(card.first));
   BOOST_CHECK_EQUAL(card.second, 6);
 
-  manifold::topology_t t;
-  status_t sts = db.get_topology("names", card.second, t);
+  sdm_vector_t t[card.second];
+  sdm_status_t sts = db.get_geometry("names", card.second, t);
   BOOST_REQUIRE(!sdm_error(sts));
-
-  BOOST_REQUIRE(t.size() == 6);
 
   // ...
   

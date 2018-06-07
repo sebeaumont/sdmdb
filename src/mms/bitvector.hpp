@@ -1,10 +1,10 @@
 #pragma once
-#include "../rtl/sdmconfig.h"
+#include "sdmconfig.h"
 
 namespace sdm {
   namespace mms {
 
-    /// fixed length or at least pre-allocated vectors using std::vector
+    /// fixed length vectors using std::vector or like containers
     
     template <typename element_t,
               std::size_t n_elements,
@@ -21,20 +21,46 @@ namespace sdm {
       ///////////////////
       
       bitvector() : base_t() {
-        this->reserve(n_elements);
+        this->resize(n_elements);
       }
       
       explicit bitvector(const allocator& a) : base_t(a) {
-        this->reserve(n_elements);
+        this->resize(n_elements);
       }
 
+      /*
+      bitvector(const bitvector& other, const allocator& a) {
+        #pragma unroll
+        #pragma clang loop vectorize(enable) interleave(enable)
+        for (unsigned i=0; i < n_elements; ++i) {
+          (*this)[i] = other[i];
+        }
+      }
+      */
+      /*
+      bitvector(const bitvector&& other) {
 
+      }
+      */
+      /*
+      bitvector(const vector_t v) {
+      }
+      */
+      /// printer 
+      friend std::ostream& operator<<(std::ostream& os, const bitvector& v) {
+        for (unsigned i=0; i < n_elements; ++i) os << v[i];
+        return os;
+      }
+
+      
       ////////////////////////////////
       /// SDM bitvector arithmetic ///
       ////////////////////////////////
       
       inline const std::size_t count() {
         std::size_t count = 0;
+        #pragma unroll
+        #pragma clang loop vectorize(enable) interleave(enable)
         for (unsigned i=0; i < n_elements; ++i) {
           #if VELEMENT_64
           count += __builtin_popcountll((*this)[i]);
@@ -121,7 +147,7 @@ namespace sdm {
         return (double) inner(v)/dimensions;
       }
     
-    
+
       /////////////////////////////////////////
       /// in place transactions onbitvectors //
       /////////////////////////////////////////

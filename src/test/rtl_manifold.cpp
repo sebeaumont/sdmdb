@@ -7,7 +7,8 @@
 #define BOOST_TEST_MODULE manifold_api
 #include <boost/test/included/unit_test.hpp>
 
-#include "rtl/manifold.hpp"
+// we need database i/f to add data but we test manifold api!
+#include "rtl/database.hpp"
 
 using namespace sdm;
 
@@ -21,8 +22,8 @@ const std::string test_lexicon = "/usr/share/dict/words";
 
 // create and destroy manifold 
 struct manifold_setup {
-  manifold rts;
-  manifold_setup () : rts(ini_size, max_size, image) {
+  database rts;
+  manifold_setup () : rts(image, ini_size, max_size) {
     BOOST_TEST_MESSAGE("setup manifold");
   }
   ~manifold_setup () {
@@ -36,7 +37,7 @@ struct manifold_setup {
 BOOST_FIXTURE_TEST_SUITE(manifold_api, manifold_setup)
 
 
-BOOST_AUTO_TEST_CASE(rts_get_topology) {
+BOOST_AUTO_TEST_CASE(rts_get_geometry) {
   std::ifstream ins(test_lexicon);
   BOOST_REQUIRE(ins.good());
   
@@ -60,17 +61,14 @@ BOOST_AUTO_TEST_CASE(rts_get_topology) {
   BOOST_REQUIRE(!sdm_error(card.first));
   BOOST_CHECK_EQUAL(card.second, loaded);
 
-  manifold::topology_t t;
+  sdm_vector_t t[card.second];
   // some changes on allocation here we will expect caller to allocate
   // space but we will take a limit on vector caridnality for security.
   // also overload this method to a buffer (aliged pointer to an element_t not void*)
   // this will ease of cffi
-  t.reserve(card.second);
-  status_t sts = rts.get_topology(test_space1, card.second, t);
+  sdm_status_t sts = rts.get_geometry(test_space1, card.second, t);
   BOOST_CHECK_EQUAL(sts, AOK);
-  
-  // actually might not be true in the wild if something changed in the space 
-  BOOST_CHECK_EQUAL(card.second, t.size());
+
 }
 
 

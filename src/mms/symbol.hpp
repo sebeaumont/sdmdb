@@ -1,7 +1,9 @@
 #pragma once
+
+#include "sdmconfig.h"
 #include "semantic_vector.hpp"
 #include "elemental_vector.hpp"
-#include "../rtl/sdmconfig.h"
+
 
 namespace sdm {
 
@@ -68,13 +70,14 @@ namespace sdm {
       inline const std::string name(void) const {
         return std::string(_name.begin(), _name.end());
       }
-  
+
+      inline const semantic_vector_t const_vector() const { return _vector; }
       inline const semantic_vector_t vector() { return _vector; }
       
       /// printer for symbol XXX might be useful to dump symbol representation to stream 
       
       friend std::ostream& operator<<(std::ostream& os, const symbol& s) {
-        os << s._name << "`" << s._refcount;
+        os << s._name; // << (s._refcount > 0 ? "`" + s._refcount : "");
         return os;
       }
 
