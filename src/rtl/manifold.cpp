@@ -29,7 +29,7 @@ namespace sdm {
   
   /// vector density
   
-  std::pair<const status_t, const double>
+  std::pair<const sdm_status_t, const double>
   manifold::density(const std::string& sn,
                     const std::string& vn) noexcept {
     auto sp = get_space_by_name(sn);
@@ -46,7 +46,7 @@ namespace sdm {
   
   /// find symbols by prefix
   
-  std::pair<status_t, manifold::symbol_list>
+  std::pair<sdm_status_t, manifold::symbol_list>
   manifold::prefix_search(const std::string& sn,
                           const std::string& vp) noexcept {
     auto sp = get_space_by_name(sn);
@@ -60,7 +60,7 @@ namespace sdm {
     
   /// compute semantic similarity between symbols
   
-  const std::pair<const status_t, const double>
+  const std::pair<const sdm_status_t, const double>
   manifold::similarity(const std::string& tvs,
                        const std::string& tvn,
                        const std::string& svs,
@@ -85,7 +85,7 @@ namespace sdm {
 
   /// compute semantic overlap between symbols -- we should have a
   
-  const std::pair<const status_t, const double>
+  const std::pair<const sdm_status_t, const double>
   manifold::overlap(const std::string& tvs,
                     const std::string& tvn,
                     const std::string& svs,
@@ -112,7 +112,7 @@ namespace sdm {
   /// under construction
   //////////////////////////
   
-  status_t manifold::get_geometry(const std::string& space, std::size_t n, geometry_t g) {
+  sdm_status_t manifold::get_geometry(const std::string& space, std::size_t n, sdm_geometry_t g) {
     // step 1 get the space 
     manifold::space* sp = get_space_by_name(space);
     if (!sp) return ESPACE; // space not found
@@ -144,7 +144,7 @@ namespace sdm {
         //dispatch_apply(m, queue, ^(std::size_t i) {
         auto s = sp->symbol_at(i);
         auto v = s.vector();
-        vector_t b;
+        sdm_vector_t b;
         // stack copy of vector... 
         v.copyto(b.data());
         g[i] = b;
@@ -155,7 +155,7 @@ namespace sdm {
     for (std::size_t i=0; i < m; ++i) {
       auto s = sp->symbol_at(i);
       auto v = s.vector();
-      vector_t b;
+      sdm_vector_t b;
       // stack copy of vector... 
       v.copyto(b.data());
       g[i] = b;      
@@ -176,10 +176,10 @@ namespace sdm {
   // basic vector retrieval
 
   /// get vector data
-  status_t
+  sdm_status_t
   manifold::load_vector(const std::string& space,
                         const std::string& name,
-                        vector_t vector) {
+                        sdm_vector_t vector) {
     // get space
     auto sp = get_space_by_name(space);
     if (!sp) return ESPACE; // space not found
@@ -190,7 +190,7 @@ namespace sdm {
     return AOK;
   }
 
-  status_t
+  sdm_status_t
   manifold::load_element(const std::string& space,
                          const std::string& name,
                          sparse_t fp) {
@@ -200,9 +200,9 @@ namespace sdm {
   
   /// try doing some metrics
   
-  status_t
+  sdm_status_t
   manifold::get_topology(const std::string& targetspace,
-                         const vector_t& vector,
+                         const sdm_vector_t& vector,
                          const std::size_t cub,
                          const metric_t metric,
                          const double dlb,
@@ -219,7 +219,7 @@ namespace sdm {
   
   /// return cardinality of a space
     
-  std::pair<status_t, std::size_t>
+  std::pair<sdm_status_t, std::size_t>
   manifold::get_space_cardinality(const std::string& sn) noexcept {
     auto sp = get_space_by_name(sn);
     if (sp) return std::make_pair(AOK, sp->entries());
@@ -270,7 +270,7 @@ namespace sdm {
   // create and manage named symbols by name -- space constructor does find_or_construct on segment
   // then database memoizes pointers to spaces to speed up symbol resolution
   
-  inline std::pair<status_t, manifold::space*>
+  inline std::pair<sdm_status_t, manifold::space*>
   manifold::ensure_space_by_name(const std::string& name) {
 
     // lookup in cache
@@ -299,7 +299,7 @@ namespace sdm {
 
   // XXX TODO read thru toppology cache
   /*
-  status_t ensure_toppology(const std::string& name) {
+  sdm_status_t ensure_toppology(const std::string& name) {
     
   }
   */

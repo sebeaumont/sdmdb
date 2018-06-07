@@ -13,7 +13,7 @@ using namespace sdm;
 /* TODO: some of the logic that has evolved in here should be re-factored back into the C++ classes */
 
 
-const status_t sdm_database(const char* filename,
+const sdm_status_t sdm_database(const char* filename,
                             size_t size,
                             size_t maxsize,
                             database_t* db) {
@@ -27,13 +27,13 @@ const status_t sdm_database(const char* filename,
   }
 }
 
-const status_t sdm_database_close(const database_t db) {
+const sdm_status_t sdm_database_close(const database_t db) {
   delete static_cast<database*>(db);
   return AOK;
 }
 
 /*
-const status_t sdm_database_get_space(const database_t db,
+const sdm_status_t sdm_database_get_space(const database_t db,
                                       const char* spacename,
                                       space_t* space) {
   database::space* sp =
@@ -43,7 +43,7 @@ const status_t sdm_database_get_space(const database_t db,
   return AOK;
 }
 
-const status_t sdm_database_ensure_space(const database_t db,
+const sdm_status_t sdm_database_ensure_space(const database_t db,
                                          const char* spacename,
                                          space_t* space) {
   try {
@@ -55,12 +55,12 @@ const status_t sdm_database_ensure_space(const database_t db,
   } catch (const std::bad_alloc& e) {
     return EMEMORY;
   } catch (...) {
-    return (const status_t) -errno;
+    return (const sdm_status_t) -errno;
   }
 }
 */
 
-const status_t sdm_database_superpose(const database_t db,
+const sdm_status_t sdm_database_superpose(const database_t db,
                                       const char* target_spacename,
                                       const char* target_symbolname,
                                       const char* source_spacename,
@@ -75,7 +75,7 @@ const status_t sdm_database_superpose(const database_t db,
 }
 
 /*
-const status_t sdm_database_ensure_space_symbol(const database_t db,
+const sdm_status_t sdm_database_ensure_space_symbol(const database_t db,
                                                 const char* spacename,
                                                 const char* symbolname,
                                                 symbol_t* sym) {
@@ -108,7 +108,7 @@ const status_t sdm_database_ensure_space_symbol(const database_t db,
     // XXX: here is where we can try and grow the heap
     return EMEMORY; // 'cos we ran out of memory!
   } catch (...) {
-    return (const status_t) -errno;
+    return (const sdm_status_t) -errno;
   }
 }
 
@@ -117,7 +117,7 @@ const status_t sdm_database_ensure_space_symbol(const database_t db,
 // ensure a symbol exists in space - may therefore entail creation and
 // insertion of a new symbol
 // 
-const status_t sdm_database_ensure_symbol(const database_t db,
+const sdm_status_t sdm_database_ensure_symbol(const database_t db,
                                           const space_t space,
                                           const char* symbolname,
                                           symbol_t* sym) {
@@ -160,7 +160,7 @@ const status_t sdm_database_ensure_symbol(const database_t db,
 // retreive a vector reference from space
 //
 /*
-const status_t sdm_space_get_vector(const space_t space,
+const sdm_status_t sdm_space_get_vector(const space_t space,
                                     const char* symbolname,
                                     vector_t* vec) {
   
@@ -175,7 +175,7 @@ const status_t sdm_space_get_vector(const space_t space,
 //
 // retrieve a symbol reference from space
 //
-const status_t sdm_space_get_symbol(const space_t space,
+const sdm_status_t sdm_space_get_symbol(const space_t space,
                                     const char* symbolname,
                                     symbol_t* sym) {
   // lost in space...
@@ -195,7 +195,7 @@ const status_t sdm_space_get_symbol(const space_t space,
 
 /*
 // new && exclusive to this library...
-const status_t sdm_space_get_symbol_vector(const space_t space,
+const sdm_status_t sdm_space_get_symbol_vector(const space_t space,
                                            const symbol_t sym,
                                            vector_t* vec) {
   auto sp = static_cast<database::space*>(space);
@@ -314,7 +314,7 @@ const card_t sdm_space_get_topology2(const space_t s,
 }
 
 
-const status_t sdm_symbol_get_basis(const symbol_t symbol,
+const sdm_status_t sdm_symbol_get_basis(const symbol_t symbol,
                                     basis_t* basis) {
   // get underlying array data from symbol
   auto sp = static_cast<const database::space::symbol*>(symbol);
@@ -323,7 +323,7 @@ const status_t sdm_symbol_get_basis(const symbol_t symbol,
 }
 
 
-const status_t sdm_vector_load(const vector_t v,
+const sdm_status_t sdm_vector_load(const vector_t v,
                                vectordata_t* vdata) {
   auto vector = static_cast<database::database::space::vector*>(v);
   vector->copy_me(vdata);
@@ -332,7 +332,7 @@ const status_t sdm_vector_load(const vector_t v,
 */
 
 // TODO
-const status_t sdm_vector_store(const vector_t v,
+const sdm_status_t sdm_vector_store(const vector_t v,
                                 vectordata_t vdata) {
   return EUNIMPLEMENTED;
 }

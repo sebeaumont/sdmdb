@@ -6,14 +6,13 @@
 #include <boost/optional.hpp>
 #include <map>
 
+#include "sdmconfig.h"
+#include "sdmtypes.h"
+
 #include "manifold.hpp"
 #include "../mms/symbol_space.hpp"
 #include "../util/fast_random.hpp"
 
-#include "config.h"
-
-#include "sdmconfig.h"
-#include "sdmstatus.h"
 
 #include <iostream>
 
@@ -59,7 +58,7 @@ namespace sdm {
     
     /// assert a named vector
         
-    const status_t
+    const sdm_status_t
     namedvector(const std::string& space_name,
                 const std::string& symbol_name,
                 // XX to do change type to a double p value default to 1
@@ -68,21 +67,21 @@ namespace sdm {
     
     /// add or superpose
     
-    const status_t
+    const sdm_status_t
     superpose(const std::string& ts, const std::string& tn,
               const std::string& ss, const std::string& sn,
               const int shift = 0) noexcept;
 
     /// batch superpose several symbols from source space
 
-    const status_t
+    const sdm_status_t
     superpose(const std::string& ts, const std::string& tn,
               const std::string& ss, const std::vector<const std::string>& sns,
               const std::vector<const int> shifts) noexcept;
     
     /// subtract
 
-    const status_t
+    const sdm_status_t
     subtract(const std::string& ts, const std::string& tn,
              const std::string& ss, const std::string& sn) noexcept;
     
@@ -111,12 +110,12 @@ namespace sdm {
     
   private:
 
-    inline std::pair<status_t, space::symbol&>
+    inline std::pair<sdm_status_t, space::symbol&>
     ensure_mutable_symbol(const std::string&,
                           const std::string&,
                           const space::symbol::type);
 
-    inline std::pair<status_t, const space::symbol*>
+    inline std::pair<sdm_status_t, const space::symbol*>
     ensure_symbol(const std::string&,
                   const std::string&,
                   const space::symbol::type);

@@ -1,7 +1,9 @@
 #pragma once
+
+#include "sdmconfig.h"
 #include "semantic_vector.hpp"
 #include "elemental_vector.hpp"
-#include "../rtl/sdmconfig.h"
+
 
 namespace sdm {
 

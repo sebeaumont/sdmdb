@@ -48,7 +48,7 @@ namespace sdm {
 
   // XXX TODO look at inlining a version of this so we can re-use
   
-  const status_t
+  const sdm_status_t
   database::namedvector(const std::string& sn,
                         const std::string& vn,
                         const space::symbol::type ty) noexcept {
@@ -71,7 +71,7 @@ namespace sdm {
   // database growth if possbile (or indeed may fail) TODO exception handling
   // and attempt growth on bad_alloc
   
-  const status_t
+  const sdm_status_t
   database::superpose(const std::string& ts,
                       const std::string& tn,
                       const std::string& ss,
@@ -79,7 +79,7 @@ namespace sdm {
                       const int shifted) noexcept {
     
     // assume all symbols are present
-    status_t state = AOLD;
+    sdm_status_t state = AOLD;
     
     auto tsp = ensure_space_by_name(ts);
     if (sdm_error(tsp.first)) return tsp.first;
@@ -121,7 +121,7 @@ namespace sdm {
 
   /// batch superpose target with multiple symbols from source space
 
-  const status_t
+  const sdm_status_t
   database::superpose(const std::string& ts,
                       const std::string& tn,
                       const std::string& ss,
@@ -129,13 +129,13 @@ namespace sdm {
                       const std::vector<const int> shifts) noexcept {
     
     // XXX new approach to keep allocations to minimum places in code
-    //status_t sts = ensure_mutable_symbol
+    //sdm_status_t sts = ensure_mutable_symbol
     return EUNIMPLEMENTED;
   }
     
   /// remove source from target -- source and target must exist else this is a noop.
   
-  const status_t
+  const sdm_status_t
   database::subtract(const std::string& tvs, 
                      const std::string& tvn,
                      const std::string& svs,
@@ -177,7 +177,7 @@ namespace sdm {
   /// inline private or protected utilities
   //////////////////////////////////////////
   /*
-  inline std::pair<status_t, space::symbol&>
+  inline std::pair<sdm_status_t, space::symbol&>
   database::ensure_mutable_symbol(const std::string& spacename,
                                   const std::string& name,
                                   const space::symbol::type type) {
@@ -193,7 +193,7 @@ namespace sdm {
   }
   */
 
-  inline std::pair<status_t, const database::space::symbol*>
+  inline std::pair<sdm_status_t, const database::space::symbol*>
   database::ensure_symbol(const std::string& spacename,
                           const std::string& name,
                           const space::symbol::type type) {

@@ -142,7 +142,7 @@ message(${CMAKE_CXX_FLAGS})
 message(${CMAKE_C_FLAGS})
 
 # generate build time header configuration
-configure_file(config.h.in config.h)
+configure_file(sdmconfig.h.in sdmconfig.h)
 
 ##################
 # runtime library

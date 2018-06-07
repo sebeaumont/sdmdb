@@ -5,10 +5,8 @@
 
 #include <Eigen/Dense>
 
-#include "config.h"
-
 #include "sdmconfig.h"
-#include "sdmstatus.h"
+#include "sdmtypes.h"
 
 #include "../mms/symbol_space.hpp"
 #include "../mms/bitvector.hpp"
@@ -57,17 +55,11 @@ namespace sdm {
 
     /// API types under construction TODO make these C friendly
 
-    // use space dependent types to define these?
-    // typedef mms::bitvector<SDM_VECTOR_ELEMENT_TYPE, SDM_VECTOR_ELEMS> vector_t;
-    typedef SDM_VECTOR_ELEMENT_TYPE vector_t[SDM_VECTOR_ELEMS];
-
-    typedef vector_t geometry_t [];    
-
     typedef Eigen::Matrix<SDM_VECTOR_ELEMENT_TYPE, SDM_VECTOR_ELEMS, Eigen::Dynamic> matrix_t;
 
     typedef std::vector<std::pair<std::size_t, double>>  topology_t;
 
-    typedef enum {Similarity, Overlap} metric_t;
+
 
     typedef std::vector<std::size_t> sparse_t;
 
@@ -91,21 +83,21 @@ namespace sdm {
                std::string& json);
     */
 
-    status_t
+    sdm_status_t
     load_vector(const std::string& space,
                 const std::string& name,
-                vector_t vector);
+                sdm_vector_t vector);
 
-    status_t
+    sdm_status_t
     load_element(const std::string& space,
                  const std::string& name,
                  sparse_t fp);
     
     /// measure a vector
     
-    status_t
+    sdm_status_t
     get_topology(const std::string& targetspace,
-                 const vector_t& vector,
+                 const sdm_vector_t& vector,
                  const std::size_t cub,
                  const metric_t metric,
                  const double dlb,
@@ -116,8 +108,8 @@ namespace sdm {
       
     /// get vectors for a space
 
-    status_t
-    get_geometry(const std::string&, std::size_t, geometry_t); 
+    sdm_status_t
+    get_geometry(const std::string&, std::size_t, sdm_geometry_t); 
     
 
     /// search for symbols starting with prefix
@@ -125,7 +117,7 @@ namespace sdm {
     typedef std::pair<manifold::space::symbol_iterator,
                       manifold::space::symbol_iterator> symbol_list;
     
-    std::pair<status_t, symbol_list>
+    std::pair<sdm_status_t, symbol_list>
     prefix_search(const std::string& space_name,
                   const std::string& symbol_prefix) noexcept;
     
@@ -135,7 +127,7 @@ namespace sdm {
     /////////////////////////
     
     /// get vector density
-    std::pair<const status_t, const double>
+    std::pair<const sdm_status_t, const double>
     density(const std::string& space_name,
             const std::string& vector_name) noexcept;
 
@@ -146,13 +138,13 @@ namespace sdm {
     
     /// simlilarity (unit distance)
 
-    const std::pair<const status_t, const double>
+    const std::pair<const sdm_status_t, const double>
     similarity(const std::string&, const std::string&,
                const std::string&, const std::string&) noexcept;
 
     /// inner product (overlap)
     
-    const std::pair<const status_t, const double>
+    const std::pair<const sdm_status_t, const double>
     overlap(const std::string&, const std::string&,
             const std::string&, const std::string&) noexcept;
 
@@ -163,7 +155,7 @@ namespace sdm {
 
     /// get space cardinality
     
-    std::pair<status_t, std::size_t>
+    std::pair<sdm_status_t, std::size_t>
     get_space_cardinality(const std::string&) noexcept;
 
   protected:
@@ -175,7 +167,7 @@ namespace sdm {
     }
 
     /// access cache of pointers to named spaces to optimize symbol lookup
-    std::pair<status_t, space*> ensure_space_by_name(const std::string&); 
+    std::pair<sdm_status_t, space*> ensure_space_by_name(const std::string&); 
     
 
   protected:

@@ -1,5 +1,5 @@
 #pragma once
-#include "../rtl/sdmconfig.h"
+#include "sdmconfig.h"
 
 namespace sdm {
   namespace mms {

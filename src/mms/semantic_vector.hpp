@@ -2,7 +2,8 @@
 
 #include <boost/interprocess/allocators/allocator.hpp>
 #include <boost/interprocess/containers/vector.hpp>
-#include "../rtl/sdmconfig.h"
+
+#include "sdmconfig.h"
 #include "bitvector.hpp"
 
 

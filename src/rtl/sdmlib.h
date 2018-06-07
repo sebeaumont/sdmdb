@@ -6,7 +6,7 @@
  */
 
 #include "sdmconfig.h"
-#include "sdmstatus.h"
+#include "sdmtypes.h"
 
 /*
  caveat: these pointer types are opaque to the capi so as not to
@@ -46,7 +46,7 @@ extern "C" {
   /**
    * ... -> database_t 
    */
-  const status_t sdm_database(const char* filename,
+  const sdm_status_t sdm_database(const char* filename,
                               size_t size,
                               size_t maxsize,
                               database_t*);
@@ -55,13 +55,13 @@ extern "C" {
    * database_t -> ...
    */
   
-  const status_t sdm_database_close(const database_t db);
+  const sdm_status_t sdm_database_close(const database_t db);
 
-  const status_t sdm_database_get_space(const database_t,
+  const sdm_status_t sdm_database_get_space(const database_t,
                                         const char* spacename,
                                         space_t*);
 
-  const status_t sdm_database_ensure_space(const database_t,
+  const sdm_status_t sdm_database_ensure_space(const database_t,
                                            const char* spacename,
                                            space_t*);
   
@@ -72,18 +72,18 @@ extern "C" {
      occurence, high performance applications are encouraged to use
      more direct api's below. */
   
-  const status_t sdm_database_ensure_space_symbol(const database_t,
+  const sdm_status_t sdm_database_ensure_space_symbol(const database_t,
                                                   const char* spacename,
                                                   const char* symbolname,
                                                   symbol_t* symbol);
 
-  const status_t sdm_database_ensure_symbol(const database_t,
+  const sdm_status_t sdm_database_ensure_symbol(const database_t,
                                             const space_t,
                                             const char* symbolname,
                                             symbol_t* symbol);
   
 
-  const status_t sdm_database_superpose(const database_t,
+  const sdm_status_t sdm_database_superpose(const database_t,
                                         const char* target_spacename,
                                         const char* target_symbolname,
                                         const char* source_spacename,
@@ -94,15 +94,15 @@ extern "C" {
    * space_t -> ...
    */
   
-  const status_t sdm_space_get_vector(const space_t,
+  const sdm_status_t sdm_space_get_vector(const space_t,
                                       const char* vectorname,
                                       vector_t*);
   
-  const status_t sdm_space_get_symbol(const space_t,
+  const sdm_status_t sdm_space_get_symbol(const space_t,
                                       const char* symbolname,
                                       symbol_t*); 
 
-  const status_t sdm_space_get_symbol_vector(const space_t space,
+  const sdm_status_t sdm_space_get_symbol_vector(const space_t space,
                                              const symbol_t sym,
                                              vector_t* vec);
  
@@ -134,7 +134,7 @@ extern "C" {
    * symbol_t ->
    */
 
-  const status_t sdm_symbol_get_basis(const symbol_t symbol,
+  const sdm_status_t sdm_symbol_get_basis(const symbol_t symbol,
                                       basis_t* basis);
   
 
@@ -142,10 +142,10 @@ extern "C" {
    * vector_t -> ...
    */
 
-  const status_t sdm_vector_load(const vector_t,
+  const sdm_status_t sdm_vector_load(const vector_t,
                                  vectordata_t* vdata);
   
-  const status_t sdm_vector_store(const vector_t,
+  const sdm_status_t sdm_vector_store(const vector_t,
                                   vectordata_t vdata);
 
   /**

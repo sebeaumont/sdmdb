@@ -216,9 +216,9 @@ int main(int argc, const char** argv) {
         std::list<std::string> sym;
         
         if (parse_symbol(cv[1], default_space, sym)) {
-          manifold::vector_t v;
+          sdm_vector_t v;
           timer t;
-          status_t s = rts.load_vector(sym.front(), sym.back(), v);
+          sdm_status_t s = rts.load_vector(sym.front(), sym.back(), v);
           if (!sdm_error(s))
             std::cout << t << sizeof(v) << "> " << std::hex << std::setw(16) << std::setfill('0') << v << std::endl;
           else
@@ -232,7 +232,7 @@ int main(int argc, const char** argv) {
         
         if (parse_symbol(cv[1], default_space, sym)) {
           timer t;
-          status_t s = rts.namedvector(sym.front(), sym.back());
+          sdm_status_t s = rts.namedvector(sym.front(), sym.back());
           std::cout << t << sym.front() << ":" << sym.back() << " (" << s << ")" << std::endl;
         }        
 
@@ -275,9 +275,9 @@ int main(int argc, const char** argv) {
         auto r = rts.get_space_cardinality(cv[1]);
         
         if (!sdm_error(r.first)) {
-          manifold::vector_t geom[r.second];
+          sdm_vector_t geom[r.second];
           timer t;
-          status_t sts = rts.get_geometry(cv[1], r.second, geom);
+          sdm_status_t sts = rts.get_geometry(cv[1], r.second, geom);
           std::cout << t << "(" << sts << ")" << r.second << std::endl;
           // TODO NEXT dump vectors to a file or matrix 
 

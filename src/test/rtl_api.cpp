@@ -39,7 +39,7 @@ BOOST_FIXTURE_TEST_SUITE(manifold_api, manifold_setup)
 
 BOOST_AUTO_TEST_CASE(rtl_api) {
 
-  status_t s = db.superpose("names","Simon","names","Beaumont");
+  sdm_status_t s = db.superpose("names","Simon","names","Beaumont");
   BOOST_REQUIRE(!sdm_error(s));
   s = db.superpose("names","Beaumont","names","Simon");
   BOOST_REQUIRE(!sdm_error(s));
@@ -63,8 +63,8 @@ BOOST_AUTO_TEST_CASE(rtl_api) {
   BOOST_REQUIRE(!sdm_error(card.first));
   BOOST_CHECK_EQUAL(card.second, 6);
 
-  manifold::vector_t t[card.second];
-  status_t sts = db.get_geometry("names", card.second, t);
+  sdm_vector_t t[card.second];
+  sdm_status_t sts = db.get_geometry("names", card.second, t);
   BOOST_REQUIRE(!sdm_error(sts));
 
   // ...
