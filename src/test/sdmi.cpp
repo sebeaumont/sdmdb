@@ -275,12 +275,20 @@ int main(int argc, const char** argv) {
         auto r = rts.get_space_cardinality(cv[1]);
         
         if (!sdm_error(r.first)) {
-          sdm_vector_t geom[r.second];
+          database::geometry g;
+          g.reserve(r.second);
           timer t;
-          sdm_status_t sts = rts.get_geometry(cv[1], r.second, geom);
-          std::cout << t << "(" << sts << ")" << r.second << std::endl;
+          sdm_status_t sts = rts.get_geometry(cv[1], g);
+          std::cout << t << "(" << sts << ")" << r.second << " dumping data..." << std::endl;
           // TODO NEXT dump vectors to a file or matrix 
-
+          std::ofstream outf(cv[1] + ".dat");
+          if (outf.good()) {
+            for (database::point p : g) {
+              outf << p.name << "\t" << p.density << "\t" << p.count << "\n";
+            }
+            outf.close();
+          }
+          
         } else {
           std::cout << "error: " << r.first << " for space: " << cv[1] << std::endl;
         }

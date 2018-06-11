@@ -66,16 +66,24 @@ namespace sdm {
           _type(t),
           _basis(f, elemental_bits, a),
           _vector(a) {}
-    
-      /// copy of name (XXX why? seems unecessary) try unit tests without this!
 
-      inline const std::string name(void) const {
+      
+      /*
+      inline const shared_string_t& name(void) const {
+        return _name;
+      }
+      */
+      
+      /// copy of name just a lot easier
+      inline std::string name(void) const {
         return std::string(_name.begin(), _name.end());
       }
-
-      inline const semantic_vector_t const_vector() const { return _vector; }
-      inline const semantic_vector_t vector() { return _vector; }
       
+      //inline const semantic_vector_t const_vector() const { return _vector; }
+      inline const semantic_vector_t vector() { return _vector; }
+
+      inline unsigned refcount() { return _refcount; }
+
       /// printer for symbol XXX might be useful to dump symbol representation to stream 
       
       friend std::ostream& operator<<(std::ostream& os, const symbol& s) {

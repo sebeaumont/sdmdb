@@ -13,7 +13,8 @@
 
 
 namespace sdm {
-  
+
+
   namespace bip = boost::interprocess;    
   
   // XXX under very active experimental development
@@ -71,6 +72,61 @@ namespace sdm {
     const manifold& operator=(const manifold&) = delete;
     const manifold& operator=(manifold&&) = delete;
 
+      
+    struct point {
+    
+      std::string name;
+      double density;
+      unsigned count;
+    
+      /// constructor copy of symbol space data
+      explicit
+      point(const std::string& v,
+            const double d,
+            const unsigned c) : name(v),
+                                density(d),
+                                count(c) {}
+      
+    };
+    
+    
+    struct neighbour : public point {
+      
+      double metric;
+      
+      explicit
+      neighbour(const std::string& v,
+                const double d,
+                const unsigned c,
+                const double m) : point(v, d, c), metric(m) {}
+      
+      
+      /// comparison operators for sorting w.r.t metric
+      // in order to compute topology of nearest neighbours
+      // to a given vector
+      
+      bool operator< (const neighbour& s) const {
+        return metric > s.metric;
+      }
+      
+      bool operator==(const neighbour& s) const {
+        return name == s.name && metric == s.metric;
+      }
+      
+      bool operator!=(const neighbour& s) const {
+        return name != s.name || metric != s.metric;
+      }
+      
+      friend std::ostream& operator<<(std::ostream& os, neighbour& p) {
+        os <<  p.name << "\t" << p.metric << "\t" << p.density;
+        return os;
+      }
+      
+    };
+  
+    typedef std::vector<point> geometry;
+    typedef std::vector<neighbour> topology;
+
     /// TODO return a symbol wholesale (serialized)
     /*
     status_t
@@ -89,7 +145,7 @@ namespace sdm {
                    const std::string& name,
                    sdm_sparse_t bits);
     
-    /// measure a vector
+    /// apply a metric to get a subset of the space
     
     sdm_status_t
     get_topology(const std::string& targetspace,
@@ -102,13 +158,19 @@ namespace sdm {
                  const double mub,
                  sdm_topology_t& top);
       
-    /// get vectors for a space
+    /// get all points in a space
 
+    // XXX attempting c and c++ versions here
+    // XXX could inline all the c++ implementations and only build a C library
+    
     sdm_status_t
     get_geometry(const std::string&,
                  const sdm_size_t,
                  sdm_geometry_t); 
-    
+
+    sdm_status_t
+    get_geometry(const std::string&,
+                 geometry&);
 
     /// search for symbols starting with prefix
     

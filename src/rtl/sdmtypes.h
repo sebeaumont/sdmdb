@@ -30,22 +30,30 @@ typedef size_t sdm_size_t;
 #endif
 
 
-/* All of the above */
+/* C friendly API types */
+
+typedef char* sdm_name_t;
 
 typedef SDM_VECTOR_ELEMENT_TYPE sdm_vector_t[SDM_VECTOR_ELEMS];
 
-typedef sdm_vector_t sdm_geometry_t [];    
+typedef struct sdm_point { const char* name; double density; unsigned refcount; } sdm_point_t;
+
+typedef sdm_point_t sdm_geometry_t [];    
 
 typedef unsigned sdm_sparse_t [];
 
-typedef enum { normal, white, pink, brown } sdm_symbol_t;
+enum sdm_symbol {normal, white, pink, brown};
+typedef enum sdm_symbol sdm_symbol_t;
 
 /* UC */
-typedef struct { char* name; double d; unsigned o; } sdm_point_t;
 
-typedef sdm_point_t sdm_topology_t[];
+typedef struct sdm_neighbour {sdm_point_t p; double metric; } sdm_neighbour_t;
 
-typedef enum {similarity, overlap} sdm_metric_t;
+typedef sdm_neighbour_t sdm_topology_t[];
+
+enum sdm_metric {similarity, overlap};
+
+typedef enum sdm_metric sdm_metric_t;
 
 
 enum sdm_status {

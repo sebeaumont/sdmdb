@@ -12,15 +12,16 @@ using namespace sdm;
 /* the c rtl implementation */
 
 const sdm_status_t
-sdm_database(const char* filename,
-             size_t size,
-             size_t maxsize,
+sdm_database(const sdm_name_t filename,
+             const size_t size,
+             const size_t maxsize,
              database_t* db) {
   try {
 
     *db = new database(std::string(filename), size, maxsize);
     return AOK;
 
+    // TODO refine this catch all and return better status
   } catch (const std::exception& e) {
 
     fprintf(stderr,
@@ -40,8 +41,8 @@ sdm_database_close(const database_t db) {
 
 const sdm_status_t
 sdm_load_vector(const database_t db,
-                const char* space_name,
-                const char* symbol_name,
+                const sdm_name_t space_name,
+                const sdm_name_t symbol_name,
                 sdm_vector_t vector) {
 
   return static_cast<database*>(db)->load_vector(std::string(space_name),

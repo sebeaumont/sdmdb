@@ -1,3 +1,4 @@
+#include <iostream> // debugging only - TODO logging!
 #include "manifold.hpp"
 
 namespace sdm {
@@ -111,8 +112,13 @@ namespace sdm {
   //////////////////////////
   /// under construction
   //////////////////////////
-  
+
   sdm_status_t manifold::get_geometry(const std::string& space, std::size_t n, sdm_geometry_t g) {
+    return EUNIMPLEMENTED;
+  }
+  
+  sdm_status_t manifold::get_geometry(const std::string& space, geometry& g) {
+
     // step 1 get the space 
     manifold::space* sp = get_space_by_name(space);
     if (!sp) return ESPACE; // space not found
@@ -120,21 +126,6 @@ namespace sdm {
     // obtain current cardinality of the space in case it is smaller than n!
     std::size_t card = sp->entries();
     
-
-    // step 2 get vectors from database into an homogenous array allocated by caller
-
-    // step 3 if required compute density of vectors and filter by upper and lower bound.
-    // xxx this would require a sparse ids and/or caching more of the symbol data also
-    
-    // allocate a topo which is just the vectors in the space
-    // topo.reserve(card); xxx callers responsibility?
-    // now copy the symbols_spaces vectors from the space into caller
-    // N.B. this could be paralellised if we indexed the target topo array
-    
-    // safety first
-    std::size_t m = card < n ? card : n;
-    //g.resize(m);
-
     /*
     #if HAVE_DISPATCH
     //dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
@@ -162,11 +153,9 @@ namespace sdm {
     }
     */
 
-    for (std::size_t i = 0; i < m; ++i) {
+    for (std::size_t i = 0; i < card; ++i) {
       auto s = sp->symbol_at(i);
-      auto v = s.vector();
-      // stack copy of vector... 
-      v.copyto(g[i]);
+      g.push_back(point(s.name(), s.density(), s.refcount()));
     }
 
     return AOK;
