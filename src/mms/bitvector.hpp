@@ -21,11 +21,11 @@ namespace sdm {
       ///////////////////
       
       bitvector() : base_t() {
-        this->resize(n_elements);
+        this->reserve(n_elements);
       }
       
       explicit bitvector(const allocator& a) : base_t(a) {
-        this->resize(n_elements);
+        this->reserve(n_elements);
       }
 
       /*
