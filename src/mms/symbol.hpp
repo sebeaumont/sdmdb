@@ -1,6 +1,8 @@
 #pragma once
 
 #include "sdmconfig.h"
+#include "../rtl/sdmtypes.h"
+
 #include "semantic_vector.hpp"
 #include "elemental_vector.hpp"
 
@@ -40,11 +42,11 @@ namespace sdm {
       typedef elemental_vector<segment_manager_t, unsigned> elemental_vector_t;
 
       // state
-      enum type { normal, white, pink, brown };
+
 
       shared_string_t _name;
       unsigned _refcount;
-      type _type;
+      sdm_prob_t _dither;
       
     private:
       
@@ -58,22 +60,30 @@ namespace sdm {
       symbol(const char* s,
              const std::vector<unsigned>& f,
              const allocator_t& a,
-             const type t = normal)
+             const sdm_prob_t p)
         : _name(s, a),
           _refcount(0),
-          _type(t),
+          _dither(p),
           _basis(f, elemental_bits, a),
           _vector(a) {}
-    
-      /// copy of name (XXX why? seems unecessary) try unit tests without this!
 
-      inline const std::string name(void) const {
+      
+      /*
+      inline const shared_string_t& name(void) const {
+        return _name;
+      }
+      */
+      
+      /// copy of name just a lot easier
+      inline std::string name(void) const {
         return std::string(_name.begin(), _name.end());
       }
-
-      inline const semantic_vector_t const_vector() const { return _vector; }
-      inline const semantic_vector_t vector() { return _vector; }
       
+      //inline const semantic_vector_t const_vector() const { return _vector; }
+      inline const semantic_vector_t vector() { return _vector; }
+
+      inline unsigned refcount() { return _refcount; }
+
       /// printer for symbol XXX might be useful to dump symbol representation to stream 
       
       friend std::ostream& operator<<(std::ostream& os, const symbol& s) {
@@ -135,32 +145,25 @@ namespace sdm {
       /////////////////////////
 
       inline void superpose(const symbol& v, int rotations = 0) {
-        if (v._type == white) {
-          // clear 1/2
-          unsigned h = v._basis.size() / 2;
-          for (auto it = v._basis.begin(); it < v._basis.begin() + h; ++it) {
-            unsigned r = (*it + rotations) % dimensions;
-            unsigned i = r / (sizeof(element_t) * CHAR_BITS);
-            unsigned b = r % (sizeof(element_t) * CHAR_BITS);
-            _vector[i] &= ~(ONE << b);
-          }
-          // set 1/2
-          for (auto it = v._basis.begin() + h; it < v._basis.end(); ++it) {
-            unsigned r = (*it + rotations) % dimensions;
-            unsigned i = r / (sizeof(element_t) * CHAR_BITS);
-            unsigned b = r % (sizeof(element_t) * CHAR_BITS);
-            _vector[i] |= (ONE << b);
-          } 
-          
-        } else {
-          // set all
-          for (auto it = v._basis.begin(); it < v._basis.end(); ++it) {
-            unsigned r = (*it + rotations) % dimensions;
-            unsigned i = r / (sizeof(element_t) * CHAR_BITS);
-            unsigned b = r % (sizeof(element_t) * CHAR_BITS);
-            _vector[i] |= (ONE << b);
-          }
+        sdm_prob_t p = v._dither;
+        unsigned h = floor(p * v._basis.size());
+        
+        // set h
+        for (auto it = v._basis.begin(); it < (v._basis.begin() + h); ++it) {
+          unsigned r = (*it + rotations) % dimensions;
+          unsigned i = r / (sizeof(element_t) * CHAR_BITS);
+          unsigned b = r % (sizeof(element_t) * CHAR_BITS);
+          _vector[i] |= (ONE << b);
         }
+        
+        // clear remainder
+        for (auto it = v._basis.begin() + h; it < v._basis.end(); ++it) {
+          unsigned r = (*it + rotations) % dimensions;
+          unsigned i = r / (sizeof(element_t) * CHAR_BITS);
+          unsigned b = r % (sizeof(element_t) * CHAR_BITS);
+          _vector[i] &= ~(ONE << b);
+        } 
+
       }
 
       ///////////////////////////////////////////////////////////////////////////
@@ -169,7 +172,7 @@ namespace sdm {
       
       inline void subtract(const symbol&v, int rotations=0) {
         // we must subtract rotated basis of source vector
-
+        /* XXX TODO 
         if (v._type == white) {
           unsigned h = v._basis.size() / 2;
           // clear top 1/2
@@ -189,6 +192,7 @@ namespace sdm {
             _vector[i] &= ~(ONE << b);
           }
         }
+        */
       }
       
     };

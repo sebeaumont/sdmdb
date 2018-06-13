@@ -51,9 +51,9 @@ namespace sdm {
   const sdm_status_t
   database::namedvector(const std::string& sn,
                         const std::string& vn,
-                        const space::symbol::type ty) noexcept {
+                        const sdm_prob_t p) noexcept {
 
-    auto symp = ensure_symbol(sn, vn, ty);
+    auto symp = ensure_symbol(sn, vn, p);
     return symp.first;
   }
 
@@ -76,7 +76,8 @@ namespace sdm {
                       const std::string& tn,
                       const std::string& ss,
                       const std::string& sn,
-                      const int shifted) noexcept {
+                      const int shifted,
+                      const bool refcount) noexcept {
     
     // assume all symbols are present
     sdm_status_t state = AOLD;
@@ -88,12 +89,16 @@ namespace sdm {
     if (sdm_error(ssp.first)) return ssp.first;
     
     
-    // get source symbol and optionally generate a new version or basis
-    boost::optional<const space::symbol&> s = ssp.second->get_symbol_by_name(sn);
+    // get source symbol
+    // TODO: optionally generate a new version or shifted basis
+    // and otionally reference count 
+    //boost::optional<const space::symbol&> s = ssp.second->get_symbol_by_name(sn, refcount);
+    boost::optional<space::symbol&> s = ssp.second->get_mutable_symbol_by_name(sn, refcount);
 
     if (!s) {
       // try inserting source symbol
-      s = ssp.second->insert_symbol(sn, irand.shuffle());
+      //s = ssp.second->insert_symbol(sn, irand.shuffle());
+      s = ssp.second->insert_mutable_symbol(sn, irand.shuffle());
       if (!s) return EINDEX;
       state = ANEW; // => a symbol was created possbily within a new space.
     }
@@ -104,7 +109,7 @@ namespace sdm {
     // CAVEAT: this must follow any insertions in the space
     // as any insert to index MAY invalidate vector or symbol pointers...
     
-    boost::optional<space::symbol&> t = tsp.second->get_mutable_symbol_by_name(tn);
+    boost::optional<space::symbol&> t = tsp.second->get_mutable_symbol_by_name(tn, false);
     
     if (!t) {
       // try inserting the target symbol
@@ -126,7 +131,8 @@ namespace sdm {
                       const std::string& tn,
                       const std::string& ss,
                       const std::vector<const std::string>& sns,
-                      const std::vector<const int> shifts) noexcept {
+                      const std::vector<const int> shifts,
+                      const bool refcount) noexcept {
     
     // XXX new approach to keep allocations to minimum places in code
     //sdm_status_t sts = ensure_mutable_symbol
@@ -145,13 +151,13 @@ namespace sdm {
     auto target_sp = get_space_by_name(tvs);
     if (!target_sp) return ESPACE;
 
-    auto target_sym = target_sp->get_mutable_symbol_by_name(tvn);
+    auto target_sym = target_sp->get_mutable_symbol_by_name(tvn, false);
     if (!target_sym) return ESYMBOL;
     
     auto source_sp = get_space_by_name(svs);
     if (!source_sp) return ESPACE;
 
-    auto source_sym = source_sp->get_symbol_by_name(svn);
+    auto source_sym = source_sp->get_symbol_by_name(svn, false); // arguable decref ;-)
     if (!source_sym) return ESYMBOL;
 
     // effect
@@ -196,17 +202,18 @@ namespace sdm {
   inline std::pair<sdm_status_t, const database::space::symbol*>
   database::ensure_symbol(const std::string& spacename,
                           const std::string& name,
-                          const space::symbol::type type) {
+                          const sdm_prob_t dither,
+                          const bool refcount) {
 
     auto sp = ensure_space_by_name(spacename);
     if (sdm_error(sp.first)) return std::make_pair(sp.first, nullptr);
     
-    auto s = sp.second->get_symbol_by_name(name);
+    auto s = sp.second->get_symbol_by_name(name, refcount);
     
     if (!s) {
       // try inserting new symbol
       try {
-        s = sp.second->insert_symbol(name, irand.shuffle(), type);
+        s = sp.second->insert_symbol(name, irand.shuffle(), dither);
         if (s) return std::make_pair(ANEW, &(*s));
         else return std::make_pair(EINDEX, nullptr);
 

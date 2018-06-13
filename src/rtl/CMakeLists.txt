@@ -27,7 +27,8 @@ set_target_properties(sdm PROPERTIES
   VERSION ${SDM_VERSION_MAJOR}.${SDM_VERSION_MINOR}
   SOVERSION ${SDM_VERSION_MAJOR})
 
-# C++ library -- database and locally euclidean topologies
+# C++ library
+# do we really need this? utiliites and tests can be statically linked to object code 
 add_library(sdmdb SHARED manifold.cpp database.cpp)
 
 set_target_properties(sdmdb PROPERTIES
@@ -37,6 +38,5 @@ set_target_properties(sdmdb PROPERTIES
 
 # install lib and headers
 install (TARGETS sdm LIBRARY DESTINATION lib)
-install (TARGETS sdmdb LIBRARY DESTINATION lib)
-# review this 
-install (FILES sdmlib.h sdmconfig.h sdmstatus.h DESTINATION include)
+#install (TARGETS sdmdb LIBRARY DESTINATION lib)
+install (FILES ${CMAKE_BINARY_DIR}/sdmconfig.h sdmlib.h sdmtypes.h DESTINATION include)

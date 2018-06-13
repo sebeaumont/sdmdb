@@ -9,152 +9,99 @@
 #include "sdmtypes.h"
 
 /*
- caveat: these pointer types are opaque to the capi so as not to
- provide a dependency on c++ classes in the implmentation:
-
- N.B. they are not currently validated by the library adapter
- except via static_cast on input.
+ * can we do better than void* and a static_cast at runtime?
 */
 
 typedef void* database_t;
-typedef void* space_t;
-typedef void* vector_t;
-typedef void const * symbol_t;
-typedef void* term_t;
-
-/* concrete types that are marshalled into caller space
-   serialiser architecture */
-
-typedef struct {
-  const char* symbol;
-  double metric;
-  double density;
-} point_t;
-
-typedef void* buffer_t;
-
-typedef SDM_VECTOR_ELEMENT_TYPE vectordata_t;
-typedef size_t basis_t; 
-typedef size_t card_t;
-
 
 /* Functions in the API */
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-  /**
-   * ... -> database_t 
-   */
-  const sdm_status_t sdm_database(const char* filename,
-                              size_t size,
-                              size_t maxsize,
-                              database_t*);
-
-  /**
-   * database_t -> ...
-   */
   
-  const sdm_status_t sdm_database_close(const database_t db);
-
-  const sdm_status_t sdm_database_get_space(const database_t,
-                                        const char* spacename,
-                                        space_t*);
-
-  const sdm_status_t sdm_database_ensure_space(const database_t,
-                                           const char* spacename,
-                                           space_t*);
+  const sdm_status_t
+  sdm_database(const sdm_name_t filename,
+               sdm_size_t size,
+               sdm_size_t maxsize,
+               database_t*);
   
-  /* convenience fns which may afford some internal optimizations for
-     interpreters and similar clients however these always incur a
-     spacename lookup which may be trivial: certainly O(1) but will entail
-     space creation and symbol creation and insertion at first
-     occurence, high performance applications are encouraged to use
-     more direct api's below. */
   
-  const sdm_status_t sdm_database_ensure_space_symbol(const database_t,
-                                                  const char* spacename,
-                                                  const char* symbolname,
-                                                  symbol_t* symbol);
+  const sdm_status_t
+  sdm_database_close(const database_t db);
 
-  const sdm_status_t sdm_database_ensure_symbol(const database_t,
-                                            const space_t,
-                                            const char* symbolname,
-                                            symbol_t* symbol);
+
+  const sdm_status_t
+  sdm_namedvector(const database_t,
+                  const sdm_name_t space_name,
+                  const sdm_name_t symbol_name,
+                  const sdm_prob_t);
   
 
-  const sdm_status_t sdm_database_superpose(const database_t,
-                                        const char* target_spacename,
-                                        const char* target_symbolname,
-                                        const char* source_spacename,
-                                        const char* source_symbolname,
-                                        const int newbasis);
-  
-  /**
-   * space_t -> ...
-   */
-  
-  const sdm_status_t sdm_space_get_vector(const space_t,
-                                      const char* vectorname,
-                                      vector_t*);
-  
-  const sdm_status_t sdm_space_get_symbol(const space_t,
-                                      const char* symbolname,
-                                      symbol_t*); 
+  const sdm_status_t
+  sdm_superpose(const database_t,
+                const sdm_name_t target_space_name,
+                const sdm_name_t target_symbol_name,
+                const sdm_name_t source_space_name,
+                const sdm_name_t source_symbol_name,
+                const int shift);
 
-  const sdm_status_t sdm_space_get_symbol_vector(const space_t space,
-                                             const symbol_t sym,
-                                             vector_t* vec);
- 
-  const card_t sdm_space_get_symbols(const space_t,
-                                     const char* prefix,
-                                     const card_t card_ub,
-                                     term_t* terms);
+  const sdm_status_t
+  sdm_subtract(const database_t,
+               const sdm_name_t target_space_name,
+               const sdm_name_t target_symbol_name,
+               const sdm_name_t source_space_name,
+               const sdm_name_t source_symbol_name,
+               const int shift);
 
-  const card_t sdm_space_serialize_symbols(const space_t space,
-                                           const char* prefix,
-                                           const card_t card_ub,
-                                           buffer_t* tp);
+
+  const sdm_status_t
+  sdm_load_vector(const database_t,
+                  const sdm_name_t space_name,
+                  const sdm_name_t symbol_name,
+                  sdm_vector_t vector);
   
-  const card_t sdm_space_get_topology(const space_t,
-                                      const vectordata_t*,
-                                      const double,
-                                      const double,
-                                      const card_t,
-                                      point_t*);
+  const sdm_status_t
+  sdm_load_elemental(const database_t,
+                     const sdm_name_t space_name,
+                     const sdm_name_t symbol_name,
+                     sdm_sparse_t bits);
 
-  const card_t sdm_space_get_topology2(const space_t,
-                                       const vectordata_t*,
-                                       const double,
-                                       const double,
-                                       const card_t,
-                                       point_t*);
+
+  const sdm_status_t
+  sdm_get_topology(const database_t,
+                   const sdm_name_t target_space,
+                   const sdm_vector_t vector,
+                   const sdm_size_t cub,
+                   const sdm_metric_t metric,
+                   const double dlb,
+                   const double dub,
+                   const double mlb,
+                   const double mub,
+                   sdm_topology_t top);
+
+  const sdm_status_t
+  sdm_get_geometry(const database_t,
+                   const sdm_name_t spacename,
+                   const sdm_size_t card,
+                   sdm_geometry_t g);
+
+  /* 
+
+  TODO: term_t or sdm_term_list_t 
+
+  const sdm_status_t
+  sdm_prefix_search(const database_t,
+                    const sdm_name_t space_name,
+                    const sdm_name_t prefix,
+                    const sdm_size_t card_ub,
+                    term_t* terms);
+  */
   
-  /**
-   * symbol_t ->
-   */
-
-  const sdm_status_t sdm_symbol_get_basis(const symbol_t symbol,
-                                      basis_t* basis);
-  
-
-  /**
-   * vector_t -> ...
-   */
-
-  const sdm_status_t sdm_vector_load(const vector_t,
-                                 vectordata_t* vdata);
-  
-  const sdm_status_t sdm_vector_store(const vector_t,
-                                  vectordata_t vdata);
-
-  /**
-   * buffer_t -> ...
-   */
-
-  const char* sdm_buffer_data(buffer_t tp);
-  
-  void sdm_buffer_free(buffer_t tp);
+  const sdm_status_t
+  sdm_get_cardinality(const database_t,
+                      const sdm_name_t space_name,
+                      sdm_size_t* card);
   
  
 

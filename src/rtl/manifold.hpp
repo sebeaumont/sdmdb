@@ -13,7 +13,8 @@
 
 
 namespace sdm {
-  
+
+
   namespace bip = boost::interprocess;    
   
   // XXX under very active experimental development
@@ -53,15 +54,6 @@ namespace sdm {
                               SDM_VECTOR_BASIS_SIZE,
                               segment_t> space;
 
-    /// API types under construction TODO make these C friendly
-
-    typedef Eigen::Matrix<SDM_VECTOR_ELEMENT_TYPE, SDM_VECTOR_ELEMS, Eigen::Dynamic> matrix_t;
-
-    typedef std::vector<std::pair<std::size_t, double>>  topology_t;
-
-
-
-    typedef std::vector<std::size_t> sparse_t;
 
     
     /// constructor for mapped image
@@ -75,8 +67,68 @@ namespace sdm {
     const manifold& operator=(const manifold&) = delete;
     const manifold& operator=(manifold&&) = delete;
 
-    /// TODO return a symbol wholesale (serialized)
+      
+    struct point {
+    
+      std::string name;
+      double density;
+      unsigned count;
+    
+      /// constructor copy of symbol space data
+      explicit
+      point(const std::string& v,
+            const double d,
+            const unsigned c) : name(v),
+                                density(d),
+                                count(c) {}
+      
+    };
+    
+    
+    struct neighbour : public point {
+      
+      double metric;
+      
+      explicit
+      neighbour(const std::string& v,
+                const double d,
+                const unsigned c,
+                const double m) : point(v, d, c), metric(m) {}
+      
+      
+      /// comparison operators for sorting w.r.t metric
+      // in order to compute topology of nearest neighbours
+      // to a given vector
+      
+      bool operator< (const neighbour& s) const {
+        return metric > s.metric;
+      }
+      
+      bool operator==(const neighbour& s) const {
+        return name == s.name && metric == s.metric;
+      }
+      
+      bool operator!=(const neighbour& s) const {
+        return name != s.name || metric != s.metric;
+      }
+      
+      friend std::ostream& operator<<(std::ostream& os, neighbour& p) {
+        os <<  p.name << "\t" << p.metric << "\t" << p.density;
+        return os;
+      }
+      
+    };
+  
+    typedef std::vector<point> geometry;
+    typedef std::vector<neighbour> topology;
+    
+    // xx plannning to use this for all semantic vector data in space for search etc.
+    // might need a few types -- some will need to be gpu compatible.
+    typedef Eigen::Matrix<SDM_VECTOR_ELEMENT_TYPE, SDM_VECTOR_ELEMS, Eigen::Dynamic> matrix_t;
+
+    
     /*
+      XXX might do serialized json versions of some API calls using cereal.
     status_t
     get_symbol(const std::string& space,
                const std::string& name,
@@ -89,28 +141,36 @@ namespace sdm {
                 sdm_vector_t vector);
 
     sdm_status_t
-    load_element(const std::string& space,
-                 const std::string& name,
-                 sparse_t fp);
+    load_elemental(const std::string& space,
+                   const std::string& name,
+                   sdm_sparse_t bits);
     
-    /// measure a vector
+    /// apply a metric to get a subset of the space
     
     sdm_status_t
     get_topology(const std::string& targetspace,
                  const sdm_vector_t& vector,
-                 const std::size_t cub,
-                 const metric_t metric,
+                 const sdm_size_t cub,
+                 const sdm_metric_t metric,
                  const double dlb,
                  const double dub,
                  const double mlb,
                  const double mub,
-                 topology_t& top);
+                 sdm_topology_t& top);
       
-    /// get vectors for a space
+    /// get all points in a space
+
+    // XXX attempting c and c++ versions here
+    // XXX could inline all the c++ implementations and only build a C library
+    
+    sdm_status_t
+    get_geometry(const std::string&,
+                 const sdm_size_t,
+                 sdm_geometry_t); 
 
     sdm_status_t
-    get_geometry(const std::string&, std::size_t, sdm_geometry_t); 
-    
+    get_geometry(const std::string&,
+                 geometry&);
 
     /// search for symbols starting with prefix
     
@@ -160,11 +220,12 @@ namespace sdm {
 
   protected:
 
-    /// get space pointer
-    inline space* get_space_by_name(const std::string& name) noexcept {
+    inline space*
+    get_space_by_name(const std::string& name) noexcept {
       auto it = spaces.find(name);
       return (it == spaces.end()) ? nullptr : it->second;
     }
+   
 
     /// access cache of pointers to named spaces to optimize symbol lookup
     std::pair<sdm_status_t, space*> ensure_space_by_name(const std::string&); 

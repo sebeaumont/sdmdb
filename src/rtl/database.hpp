@@ -61,8 +61,7 @@ namespace sdm {
     const sdm_status_t
     namedvector(const std::string& space_name,
                 const std::string& symbol_name,
-                // XX to do change type to a double p value default to 1
-                const space::symbol::type type = space::symbol::type::normal) noexcept;
+                const sdm_prob_t type = 1.0) noexcept;
 
     
     /// add or superpose
@@ -70,14 +69,16 @@ namespace sdm {
     const sdm_status_t
     superpose(const std::string& ts, const std::string& tn,
               const std::string& ss, const std::string& sn,
-              const int shift = 0) noexcept;
+              const int shift = 0,
+              const bool refcount = false) noexcept;
 
     /// batch superpose several symbols from source space
 
     const sdm_status_t
     superpose(const std::string& ts, const std::string& tn,
               const std::string& ss, const std::vector<const std::string>& sns,
-              const std::vector<const int> shifts) noexcept;
+              const std::vector<const int> shifts,
+              const bool refcount = false) noexcept;
     
     /// subtract
 
@@ -111,14 +112,16 @@ namespace sdm {
   private:
 
     inline std::pair<sdm_status_t, space::symbol&>
-    ensure_mutable_symbol(const std::string&,
-                          const std::string&,
-                          const space::symbol::type);
+    ensure_mutable_symbol(const std::string& space,
+                          const std::string& name,
+                          const sdm_prob_t dither = 1.0,
+                          const bool refcount = false);
 
     inline std::pair<sdm_status_t, const space::symbol*>
     ensure_symbol(const std::string&,
                   const std::string&,
-                  const space::symbol::type);
+                  const sdm_prob_t dither = 1.0,
+                  const bool refcount = false);
 
   private:
     

@@ -1,3 +1,4 @@
+#include <iostream> // debugging only - TODO logging!
 #include "manifold.hpp"
 
 namespace sdm {
@@ -37,7 +38,7 @@ namespace sdm {
       return std::make_pair(ESPACE, 0);
     } else {
       // non_const as density() function cannot be marked const!
-      auto v = sp->get_mutable_symbol_by_name(vn);
+      auto v = sp->get_mutable_symbol_by_name(vn, false); // don't refcount trivial deref
       if (v) return  std::make_pair(AOLD, v->density());
       else return std::make_pair(ESYMBOL, 0);
     }
@@ -70,13 +71,13 @@ namespace sdm {
     auto target_sp = get_space_by_name(tvs);
     if (!target_sp) return std::make_pair(ESPACE, 0);
 
-    auto target_sym = target_sp->get_mutable_symbol_by_name(tvn);
+    auto target_sym = target_sp->get_mutable_symbol_by_name(tvn, false);
     if (!target_sym) return std::make_pair(ESYMBOL, 0);
 
     auto source_sp = get_space_by_name(svs);
     if (!source_sp) return std::make_pair(ESPACE, 0);
 
-    auto source_sym = source_sp->get_symbol_by_name(svn);
+    auto source_sym = source_sp->get_symbol_by_name(svn, false);
     if (!source_sym) return std::make_pair(ESYMBOL, 0);
 
     return std::make_pair(AOLD, target_sym->similarity(*source_sym));
@@ -95,13 +96,13 @@ namespace sdm {
     auto target_sp = get_space_by_name(tvs);
     if (!target_sp) return std::make_pair(ESPACE, 0);
     
-    auto target_sym = target_sp->get_mutable_symbol_by_name(tvn);
+    auto target_sym = target_sp->get_mutable_symbol_by_name(tvn, false);
     if (!target_sym) return std::make_pair(ESYMBOL, 0);
 
     auto source_sp = get_space_by_name(svs);
     if (!source_sp) return std::make_pair(ESPACE, 0);
 
-    auto source_sym = source_sp->get_symbol_by_name(svn);
+    auto source_sym = source_sp->get_symbol_by_name(svn, false);
     if (!source_sym) return std::make_pair(ESYMBOL, 0);
     // 
     return std::make_pair(AOLD, target_sym->overlap(*source_sym));
@@ -111,8 +112,13 @@ namespace sdm {
   //////////////////////////
   /// under construction
   //////////////////////////
-  
+
   sdm_status_t manifold::get_geometry(const std::string& space, std::size_t n, sdm_geometry_t g) {
+    return EUNIMPLEMENTED;
+  }
+  
+  sdm_status_t manifold::get_geometry(const std::string& space, geometry& g) {
+
     // step 1 get the space 
     manifold::space* sp = get_space_by_name(space);
     if (!sp) return ESPACE; // space not found
@@ -120,21 +126,6 @@ namespace sdm {
     // obtain current cardinality of the space in case it is smaller than n!
     std::size_t card = sp->entries();
     
-
-    // step 2 get vectors from database into an homogenous array allocated by caller
-
-    // step 3 if required compute density of vectors and filter by upper and lower bound.
-    // xxx this would require a sparse ids and/or caching more of the symbol data also
-    
-    // allocate a topo which is just the vectors in the space
-    // topo.reserve(card); xxx callers responsibility?
-    // now copy the symbols_spaces vectors from the space into caller
-    // N.B. this could be paralellised if we indexed the target topo array
-    
-    // safety first
-    std::size_t m = card < n ? card : n;
-    //g.resize(m);
-
     /*
     #if HAVE_DISPATCH
     //dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
@@ -162,11 +153,9 @@ namespace sdm {
     }
     */
 
-    for (std::size_t i = 0; i < m; ++i) {
+    for (std::size_t i = 0; i < card; ++i) {
       auto s = sp->symbol_at(i);
-      auto v = s.vector();
-      // stack copy of vector... 
-      v.copyto(g[i]);
+      g.push_back(point(s.name(), s.density(), s.refcount()));
     }
 
     return AOK;
@@ -183,7 +172,7 @@ namespace sdm {
     // get space
     auto sp = get_space_by_name(space);
     if (!sp) return ESPACE; // space not found
-    auto sym = sp->get_mutable_symbol_by_name(name);
+    auto sym = sp->get_mutable_symbol_by_name(name, false);
     if (!sym) return ESYMBOL;
     auto v = sym->vector();
     v.copyto(vector);
@@ -191,9 +180,9 @@ namespace sdm {
   }
 
   sdm_status_t
-  manifold::load_element(const std::string& space,
-                         const std::string& name,
-                         sparse_t fp) {
+  manifold::load_elemental(const std::string& space,
+                           const std::string& name,
+                           sdm_sparse_t fp) {
     return EUNIMPLEMENTED;
   }
 
@@ -203,18 +192,31 @@ namespace sdm {
   sdm_status_t
   manifold::get_topology(const std::string& targetspace,
                          const sdm_vector_t& vector,
-                         const std::size_t cub,
-                         const metric_t metric,
+                         const sdm_size_t cub,
+                         const sdm_metric_t metric,
                          const double dlb,
                          const double dub,
                          const double mlb,
                          const double mub,
-                         topology_t& top) {
+                         sdm_topology_t& top) {
     //
     return EUNIMPLEMENTED;
   }
   
   
+
+  /*
+    XXX 
+    TODO check this if this is fixed
+    as had weird behaviour -- hangs or throws assersion errors
+    so I'm doing a workaround and cache all spaces at rts start up via ensure space_by_name
+    probably be quicker...
+    
+    std::pair<manifold::space*, std::size_t>
+    manifold::get_space_by_name(const std::string& name) {
+    return heap.find<space>(name.c_str());
+    }
+  */
 
   
   /// return cardinality of a space
@@ -226,23 +228,7 @@ namespace sdm {
     else return std::make_pair(ESPACE, 0);
   }
 
-  // lookup a space by name
-
-  /*
-    XXX 
-    TODO check this if this is fixed
-    this has weird behaviour -- hangs or throws assersion errors
-    so I'm doing a workaround and cache all spaces at rts start up via ensure space_by_name
-    probably be quicker...
-    
-    std::pair<manifold::space*, std::size_t>
-    manifold::get_space_by_name(const std::string& name) {
-    return heap.find<space>(name.c_str());
-    }
-  */
   
-  // this is meant to be fast so no optional's here
-  // XX might change i/f to return a status pair
 
   /// lookup all spaces in the heap/segment manager
   
@@ -266,7 +252,8 @@ namespace sdm {
     return names;
   }
 
-  
+
+  // XXX manifold is meant to be readonly so this cant be here!
   // create and manage named symbols by name -- space constructor does find_or_construct on segment
   // then database memoizes pointers to spaces to speed up symbol resolution
   
@@ -287,7 +274,7 @@ namespace sdm {
         return std::make_pair(ANEW, sp);
         
       } catch (boost::interprocess::bad_alloc& e) {
-        // try and expand memory and retry  or... 
+        // try and expand memory and retry  or...
         return std::make_pair(EMEMORY, nullptr);
       }
       
