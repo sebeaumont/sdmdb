@@ -102,6 +102,8 @@ int main(int argc, const char** argv) {
   bool cotrain = false;
   // train with differentiated term instances
   bool diffterms = false;
+  // reference count source symbols in superposition
+  bool refcount = false;
   // lines start with frame ids to group frames else assume 1 line/frame
   bool frameids = false;
 
@@ -123,6 +125,8 @@ int main(int argc, const char** argv) {
      "data lines start with frame ids for grouping")
     ("multisense", po::bool_switch(&diffterms),
      "train with differentiated instances of terms")
+    ("refcount", po::bool_switch(&refcount),
+     "reference count source terms in training")
     ("cotrain", po::bool_switch(&cotrain),
      "co-train terms in termspace")
     ("termspace", po::value<string>(),
@@ -185,6 +189,7 @@ int main(int argc, const char** argv) {
   cout << "framespace: " << (reverse_index ? framespace : "None") << endl;
   cout << "cotrain:    " << cotrain                               << endl;
   cout << "multisense: " << diffterms                             << endl;
+  cout << "refcount:   " << refcount                              << endl;
   cout << "============================================="         << endl;
 
   // create database with requirement
@@ -225,6 +230,8 @@ int main(int argc, const char** argv) {
   // simple cline processor
   while (getline(cin, input)) {
     rows++;
+
+    if ((rows % 1000) == 0) cout << "." << std::flush;
     
     boost::trim(input);
     vector<string> tv;
@@ -266,7 +273,7 @@ int main(int argc, const char** argv) {
         for (auto first = termset.begin(); first != termset.end(); ++first) {
           for (auto next = std::next(first); next != termset.end(); ++next) {
             // assert: first R next
-            db.superpose(termspace, *first, termspace, *next, diffterms);
+            db.superpose(termspace, *first, termspace, *next, diffterms, refcount);
             // if aRb => bRa then reify, latch current sense
             if (symmetric) db.superpose(termspace, *next, termspace, *first);
           }

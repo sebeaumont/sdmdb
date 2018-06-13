@@ -46,7 +46,7 @@ namespace sdm {
 
       shared_string_t _name;
       unsigned _refcount;
-      sdm_symbol_t _type;
+      sdm_prob_t _dither;
       
     private:
       
@@ -60,10 +60,10 @@ namespace sdm {
       symbol(const char* s,
              const std::vector<unsigned>& f,
              const allocator_t& a,
-             const sdm_symbol_t t)
+             const sdm_prob_t p)
         : _name(s, a),
           _refcount(0),
-          _type(t),
+          _dither(p),
           _basis(f, elemental_bits, a),
           _vector(a) {}
 
@@ -145,32 +145,25 @@ namespace sdm {
       /////////////////////////
 
       inline void superpose(const symbol& v, int rotations = 0) {
-        if (v._type == white) {
-          // clear 1/2
-          unsigned h = v._basis.size() / 2;
-          for (auto it = v._basis.begin(); it < v._basis.begin() + h; ++it) {
-            unsigned r = (*it + rotations) % dimensions;
-            unsigned i = r / (sizeof(element_t) * CHAR_BITS);
-            unsigned b = r % (sizeof(element_t) * CHAR_BITS);
-            _vector[i] &= ~(ONE << b);
-          }
-          // set 1/2
-          for (auto it = v._basis.begin() + h; it < v._basis.end(); ++it) {
-            unsigned r = (*it + rotations) % dimensions;
-            unsigned i = r / (sizeof(element_t) * CHAR_BITS);
-            unsigned b = r % (sizeof(element_t) * CHAR_BITS);
-            _vector[i] |= (ONE << b);
-          } 
-          
-        } else {
-          // set all
-          for (auto it = v._basis.begin(); it < v._basis.end(); ++it) {
-            unsigned r = (*it + rotations) % dimensions;
-            unsigned i = r / (sizeof(element_t) * CHAR_BITS);
-            unsigned b = r % (sizeof(element_t) * CHAR_BITS);
-            _vector[i] |= (ONE << b);
-          }
+        sdm_prob_t p = v._dither;
+        unsigned h = floor(p * v._basis.size());
+        
+        // set h
+        for (auto it = v._basis.begin(); it < (v._basis.begin() + h); ++it) {
+          unsigned r = (*it + rotations) % dimensions;
+          unsigned i = r / (sizeof(element_t) * CHAR_BITS);
+          unsigned b = r % (sizeof(element_t) * CHAR_BITS);
+          _vector[i] |= (ONE << b);
         }
+        
+        // clear remainder
+        for (auto it = v._basis.begin() + h; it < v._basis.end(); ++it) {
+          unsigned r = (*it + rotations) % dimensions;
+          unsigned i = r / (sizeof(element_t) * CHAR_BITS);
+          unsigned b = r % (sizeof(element_t) * CHAR_BITS);
+          _vector[i] &= ~(ONE << b);
+        } 
+
       }
 
       ///////////////////////////////////////////////////////////////////////////
@@ -179,7 +172,7 @@ namespace sdm {
       
       inline void subtract(const symbol&v, int rotations=0) {
         // we must subtract rotated basis of source vector
-
+        /* XXX TODO 
         if (v._type == white) {
           unsigned h = v._basis.size() / 2;
           // clear top 1/2
@@ -199,6 +192,7 @@ namespace sdm {
             _vector[i] &= ~(ONE << b);
           }
         }
+        */
       }
       
     };

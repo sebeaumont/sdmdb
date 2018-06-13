@@ -35,7 +35,7 @@ extern "C" {
   sdm_namedvector(const database_t,
                   const sdm_name_t space_name,
                   const sdm_name_t symbol_name,
-                  const sdm_symbol_t);
+                  const sdm_prob_t);
   
 
   const sdm_status_t

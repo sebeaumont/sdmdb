@@ -165,10 +165,10 @@ namespace sdm {
       inline boost::optional<const symbol&>
       insert_symbol(const std::string& name,
                     const std::vector<unsigned>& basis,
-                    const sdm_symbol_t ty = normal) {
+                    const sdm_prob_t p = 1.0) {
 
         // construct symbol and try and insert into index
-        inserted_t either = index->insert(symbol(name.c_str(), basis, allocator, ty));
+        inserted_t either = index->insert(symbol(name.c_str(), basis, allocator, p));
         // index may prevent us 
         if (!either.second) return boost::none;
         else return *either.first;
@@ -186,10 +186,10 @@ namespace sdm {
       inline boost::optional<symbol&>
       insert_mutable_symbol(const std::string& name,
                             const std::vector<unsigned>& basis,
-                            const sdm_symbol_t ty = normal) {
+                            const sdm_prob_t p = 1.0) {
 
         // construct symbol and try and insert into index
-        inserted_t either = index->insert(symbol(name.c_str(), basis, allocator, ty));
+        inserted_t either = index->insert(symbol(name.c_str(), basis, allocator, p));
         // index may prevent us 
         if (!either.second) return boost::none;
         else {
@@ -226,7 +226,7 @@ namespace sdm {
       typedef typename symbol_table_t::template nth_index<0>::type symbol_by_name;
 
       inline boost::optional<const symbol&>
-      get_symbol_by_name(const std::string& k, bool refcount=false) {
+      get_symbol_by_name(const std::string& k, bool refcount) {
         symbol_by_name& name_idx = index->template get<0>();
         typename symbol_by_name::iterator i = name_idx.find(shared_string(k));
         if (i == name_idx.end()) return boost::none;
@@ -253,7 +253,7 @@ namespace sdm {
          learning operations */
       
       inline boost::optional<symbol&>
-      get_mutable_symbol_by_name(const std::string& k, bool refcount=false) {
+      get_mutable_symbol_by_name(const std::string& k, bool refcount) {
         symbol_by_name& name_idx = index->template get<0>();
         typename symbol_by_name::iterator i = name_idx.find(shared_string(k));
         if (i == name_idx.end()) return boost::none;

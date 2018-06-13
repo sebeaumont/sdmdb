@@ -54,11 +54,6 @@ namespace sdm {
                               SDM_VECTOR_BASIS_SIZE,
                               segment_t> space;
 
-    /// API types under construction TODO make these C friendly
-
-    typedef Eigen::Matrix<SDM_VECTOR_ELEMENT_TYPE, SDM_VECTOR_ELEMS, Eigen::Dynamic> matrix_t;
-
-    // not yet typedef std::vector<std::pair<std::size_t, double>>  topology_t;
 
     
     /// constructor for mapped image
@@ -126,9 +121,14 @@ namespace sdm {
   
     typedef std::vector<point> geometry;
     typedef std::vector<neighbour> topology;
+    
+    // xx plannning to use this for all semantic vector data in space for search etc.
+    // might need a few types -- some will need to be gpu compatible.
+    typedef Eigen::Matrix<SDM_VECTOR_ELEMENT_TYPE, SDM_VECTOR_ELEMS, Eigen::Dynamic> matrix_t;
 
-    /// TODO return a symbol wholesale (serialized)
+    
     /*
+      XXX might do serialized json versions of some API calls using cereal.
     status_t
     get_symbol(const std::string& space,
                const std::string& name,

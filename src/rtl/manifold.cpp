@@ -38,7 +38,7 @@ namespace sdm {
       return std::make_pair(ESPACE, 0);
     } else {
       // non_const as density() function cannot be marked const!
-      auto v = sp->get_mutable_symbol_by_name(vn);
+      auto v = sp->get_mutable_symbol_by_name(vn, false); // don't refcount trivial deref
       if (v) return  std::make_pair(AOLD, v->density());
       else return std::make_pair(ESYMBOL, 0);
     }
@@ -71,13 +71,13 @@ namespace sdm {
     auto target_sp = get_space_by_name(tvs);
     if (!target_sp) return std::make_pair(ESPACE, 0);
 
-    auto target_sym = target_sp->get_mutable_symbol_by_name(tvn);
+    auto target_sym = target_sp->get_mutable_symbol_by_name(tvn, false);
     if (!target_sym) return std::make_pair(ESYMBOL, 0);
 
     auto source_sp = get_space_by_name(svs);
     if (!source_sp) return std::make_pair(ESPACE, 0);
 
-    auto source_sym = source_sp->get_symbol_by_name(svn);
+    auto source_sym = source_sp->get_symbol_by_name(svn, false);
     if (!source_sym) return std::make_pair(ESYMBOL, 0);
 
     return std::make_pair(AOLD, target_sym->similarity(*source_sym));
@@ -96,13 +96,13 @@ namespace sdm {
     auto target_sp = get_space_by_name(tvs);
     if (!target_sp) return std::make_pair(ESPACE, 0);
     
-    auto target_sym = target_sp->get_mutable_symbol_by_name(tvn);
+    auto target_sym = target_sp->get_mutable_symbol_by_name(tvn, false);
     if (!target_sym) return std::make_pair(ESYMBOL, 0);
 
     auto source_sp = get_space_by_name(svs);
     if (!source_sp) return std::make_pair(ESPACE, 0);
 
-    auto source_sym = source_sp->get_symbol_by_name(svn);
+    auto source_sym = source_sp->get_symbol_by_name(svn, false);
     if (!source_sym) return std::make_pair(ESYMBOL, 0);
     // 
     return std::make_pair(AOLD, target_sym->overlap(*source_sym));
@@ -172,7 +172,7 @@ namespace sdm {
     // get space
     auto sp = get_space_by_name(space);
     if (!sp) return ESPACE; // space not found
-    auto sym = sp->get_mutable_symbol_by_name(name);
+    auto sym = sp->get_mutable_symbol_by_name(name, false);
     if (!sym) return ESYMBOL;
     auto v = sym->vector();
     v.copyto(vector);
