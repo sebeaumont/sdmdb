@@ -91,7 +91,7 @@ namespace sdm {
     
     // get source symbol
     // TODO: optionally generate a new version or shifted basis
-    // and otionally reference count 
+    // NB: using mutable symbol reference offers a subtantial speed up when reference counting.
     //boost::optional<const space::symbol&> s = ssp.second->get_symbol_by_name(sn, refcount);
     boost::optional<space::symbol&> s = ssp.second->get_mutable_symbol_by_name(sn, refcount);
 
