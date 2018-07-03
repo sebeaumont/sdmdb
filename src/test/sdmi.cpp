@@ -374,7 +374,7 @@ int main(int argc, const char** argv) {
           std::cout << t << std::endl;
           if (!sdm_error(ip.first))
             std::copy(ip.second.first, ip.second.second,
-                      std::ostream_iterator<database::space::symbol>(std::cout, "\n"));
+                      std::ostream_iterator<database::space::symbol_t>(std::cout, "\n"));
           else std::cout << sym.front() << ":" << sym.back() << " not found" << std::endl;
         }
     }

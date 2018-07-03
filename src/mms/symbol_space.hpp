@@ -62,8 +62,11 @@ namespace sdm {
       
       ////////////////////////
       // implement symbol type
-      
+    public:
       typedef symbol<segment_manager_t, shared_string_t, void_allocator_t> symbol_t;
+
+    private:
+      
       // symbol_t dependant types
       typedef typename symbol_t::elemental_vector_t basis_t;
       typedef typename symbol_t::semantic_vector_t vector_t;
@@ -150,7 +153,7 @@ namespace sdm {
      
       /// public symbol type
       
-      typedef symbol_t symbol; // public face of symbol
+      //typedef symbol_t symbol; // public face of symbol
       
       /////////////////////////////////////
       /// multi index container indexes ///
@@ -162,13 +165,13 @@ namespace sdm {
       
       /// attempt to construct and insert named symbol into index
       
-      inline boost::optional<const symbol&>
+      inline boost::optional<const symbol_t&>
       insert_symbol(const std::string& name,
                     const std::vector<unsigned>& basis,
                     const sdm_prob_t p = 1.0) {
 
         // construct symbol and try and insert into index
-        inserted_t either = index->insert(symbol(name.c_str(), basis, allocator, p));
+        inserted_t either = index->insert(symbol_t(name.c_str(), basis, allocator, p));
         // index may prevent us 
         if (!either.second) return boost::none;
         else return *either.first;
@@ -183,17 +186,17 @@ namespace sdm {
       ///   are non const, for properties that are modified during
       ///   learning operations
 
-      inline boost::optional<symbol&>
+      inline boost::optional<symbol_t&>
       insert_mutable_symbol(const std::string& name,
                             const std::vector<unsigned>& basis,
                             const sdm_prob_t p = 1.0) {
 
         // construct symbol and try and insert into index
-        inserted_t either = index->insert(symbol(name.c_str(), basis, allocator, p));
+        inserted_t either = index->insert(symbol_t(name.c_str(), basis, allocator, p));
         // index may prevent us 
         if (!either.second) return boost::none;
         else {
-          symbol& s = const_cast<symbol&>(*either.first);
+          symbol_t& s = const_cast<symbol_t&>(*either.first);
           return s;
         }
       }
@@ -207,14 +210,14 @@ namespace sdm {
       
       /// overload [] and delegate to direct index
       
-      inline const symbol& operator[](std::size_t i) {
+      inline const symbol_t& operator[](std::size_t i) {
         symbol_by_index& symbols = index->template get<2>(); 
         return symbols[i]; 
       }
 
       /// more useful
       
-      inline const symbol& symbol_at(std::size_t i) {
+      inline const symbol_t& symbol_at(std::size_t i) {
          symbol_by_index& symbols = index->template get<2>();
          return symbols[i];
       }
@@ -225,7 +228,7 @@ namespace sdm {
       
       typedef typename symbol_table_t::template nth_index<0>::type symbol_by_name;
 
-      inline boost::optional<const symbol&>
+      inline boost::optional<const symbol_t&>
       get_symbol_by_name(const std::string& k, bool refcount) {
         symbol_by_name& name_idx = index->template get<0>();
         typename symbol_by_name::iterator i = name_idx.find(shared_string(k));
@@ -241,7 +244,7 @@ namespace sdm {
       struct bump_reference {
         bump_reference(void) {
         }
-        void operator() (symbol& s) {
+        void operator() (symbol_t& s) {
           s._refcount++;
         }
       };
@@ -252,12 +255,12 @@ namespace sdm {
          are non const, for properties that are modified during
          learning operations */
       
-      inline boost::optional<symbol&>
+      inline boost::optional<symbol_t&>
       get_mutable_symbol_by_name(const std::string& k, bool refcount) {
         symbol_by_name& name_idx = index->template get<0>();
         typename symbol_by_name::iterator i = name_idx.find(shared_string(k));
         if (i == name_idx.end()) return boost::none;
-        symbol& s = const_cast<symbol&>(*i);
+        symbol_t& s = const_cast<symbol_t&>(*i);
         if (refcount) s._refcount++;
         return s;
       }

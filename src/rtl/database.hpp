@@ -111,13 +111,13 @@ namespace sdm {
     
   private:
 
-    inline std::pair<sdm_status_t, space::symbol&>
+    inline std::pair<sdm_status_t, space::symbol_t&>
     ensure_mutable_symbol(const std::string& space,
                           const std::string& name,
                           const sdm_prob_t dither = 1.0,
                           const bool refcount = false);
 
-    inline std::pair<sdm_status_t, const space::symbol*>
+    inline std::pair<sdm_status_t, const space::symbol_t*>
     ensure_symbol(const std::string&,
                   const std::string&,
                   const sdm_prob_t dither = 1.0,

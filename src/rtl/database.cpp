@@ -22,7 +22,7 @@ namespace sdm {
       maxheap(max_size),          // maximum size of heap in bytes
       compclose(compact),         // compact heap on close?
       // initialize PRNG
-      irand(random::index_randomizer(space::symbol::dimensions)) {
+      irand(random::index_randomizer(space::symbol_t::dimensions)) {
     
     // pre-load space cache (and workaroud some weirdness)
     for (std::string spacename: get_named_spaces())
@@ -93,7 +93,7 @@ namespace sdm {
     // TODO: optionally generate a new version or shifted basis
     // NB: using mutable symbol reference offers a subtantial speed up when reference counting.
     //boost::optional<const space::symbol&> s = ssp.second->get_symbol_by_name(sn, refcount);
-    boost::optional<space::symbol&> s = ssp.second->get_mutable_symbol_by_name(sn, refcount);
+    boost::optional<space::symbol_t&> s = ssp.second->get_mutable_symbol_by_name(sn, refcount);
 
     if (!s) {
       // try inserting source symbol
@@ -109,7 +109,7 @@ namespace sdm {
     // CAVEAT: this must follow any insertions in the space
     // as any insert to index MAY invalidate vector or symbol pointers...
     
-    boost::optional<space::symbol&> t = tsp.second->get_mutable_symbol_by_name(tn, false);
+    boost::optional<space::symbol_t&> t = tsp.second->get_mutable_symbol_by_name(tn, false);
     
     if (!t) {
       // try inserting the target symbol
@@ -199,7 +199,7 @@ namespace sdm {
   }
   */
 
-  inline std::pair<sdm_status_t, const database::space::symbol*>
+  inline std::pair<sdm_status_t, const database::space::symbol_t*>
   database::ensure_symbol(const std::string& spacename,
                           const std::string& name,
                           const sdm_prob_t dither,
