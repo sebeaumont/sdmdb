@@ -14,7 +14,7 @@
 #include "symbol.hpp"
 
 
-#ifdef HAVE_DISPATCH
+#if HAVE_DISPATCH
 #include <dispatch/dispatch.h>
 #else
 // openMP
