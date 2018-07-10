@@ -17,7 +17,7 @@ include_directories (${Boost_INCLUDE_DIR})
 message("${CPU_FEATURES}")
 
 add_executable (rtl_load_space rtl_load_space.cpp)
-target_link_libraries(rtl_load_space sdm)
+target_link_libraries(rtl_load_space sdmdb)
 target_link_libraries(rtl_load_space ${CMAKE_EXE_LINKER_FLAGS})
 
 
