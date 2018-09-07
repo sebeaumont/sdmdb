@@ -87,7 +87,18 @@ namespace sdm {
     
     auto ssp = ensure_space_by_name(ss);
     if (sdm_error(ssp.first)) return ssp.first;
-    
+
+    // XXX
+    // reference counting only makes sense w.r.t to training on the
+    // target symbol since pairwise training of frames inflates count
+    // to reflect complexity (size) of frame not the occurences:
+    // e.g. in [A B C D] C would be counted 2 and D as 3 if we do it
+    // on the target then it is the same as density so redundant
+    //
+    // this case is orthogonal to shifting the basis vectors other
+    // than using the reference count as an occurrence counter --
+    // ie. a separation of converns violation leading to confusion
+    // XXX
     
     // get source symbol
     // TODO: optionally generate a new version or shifted basis

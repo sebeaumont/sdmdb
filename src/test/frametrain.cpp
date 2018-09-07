@@ -60,7 +60,7 @@ private:
 // tokenzier for input line
 //
 
-void tokenize_line(const string& s, vector<string>& o) {
+void tokenize_line_text(const string& s, vector<string>& o) {
 
   typedef boost::tokenizer<boost::char_separator<char>> tokenizer;
   boost::char_separator<char> sep(" \n\t");
@@ -71,6 +71,21 @@ void tokenize_line(const string& s, vector<string>& o) {
     // clean up
     boost::trim_left_if(t, boost::is_any_of(" .-:<"));
     boost::trim_right_if(t, boost::is_any_of(" .-:>?!,;")); 
+    o.push_back(t);
+  }
+}
+
+
+void tokenize_line(const string& s, vector<string>& o) {
+
+  typedef boost::tokenizer<boost::char_separator<char>> tokenizer;
+  boost::char_separator<char> sep("\t");
+  tokenizer tokens(s, sep);
+
+  for(auto j = tokens.begin(); j != tokens.end(); ++j) {
+    string t(*j);
+    // clean up any whitespace
+    boost::trim(t);
     o.push_back(t);
   }
 }
@@ -94,8 +109,7 @@ int main(int argc, const char** argv) {
   // global training parameters
 
   // command line options
-  bool symmetric = false; // TODO -- what was the intension here?
-  
+  bool symmetric = false; // aRb => bRa
   // create a reverse index of frames?
   bool reverse_index = false;
   // co train terms in termspace?
@@ -129,6 +143,8 @@ int main(int argc, const char** argv) {
      "reference count source terms in training")
     ("cotrain", po::bool_switch(&cotrain),
      "co-train terms in termspace")
+    ("symmetric", po::bool_switch(&symmetric),
+     "aRb => bRA")
     ("termspace", po::value<string>(),
      "name of space for terms")
     ("framespace", po::value<string>(),
@@ -187,6 +203,7 @@ int main(int argc, const char** argv) {
   cout << "maxsize:    " << maximum_size                          << endl;
   cout << "termspace:  " << termspace                             << endl;
   cout << "framespace: " << (reverse_index ? framespace : "None") << endl;
+  cout << "symmetric:  " << symmetric                             << endl;
   cout << "cotrain:    " << cotrain                               << endl;
   cout << "multisense: " << diffterms                             << endl;
   cout << "refcount:   " << refcount                              << endl;
@@ -270,11 +287,12 @@ int main(int argc, const char** argv) {
       // cotrain terms in termspace
       if (cotrain) {
         // co-train pairwise combinatations of terms
+        // XXX the triangular optimization only makes sense if relation is symmetric. XXX
         for (auto first = termset.begin(); first != termset.end(); ++first) {
           for (auto next = std::next(first); next != termset.end(); ++next) {
             // assert: first R next
             db.superpose(termspace, *first, termspace, *next, diffterms, refcount);
-            // if aRb => bRa then reify, latch current sense
+            // if aRb => bRa then reify next R first
             if (symmetric) db.superpose(termspace, *next, termspace, *first);
           }
         }
