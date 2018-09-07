@@ -218,7 +218,8 @@ int main(int argc, const char** argv) {
   if (spaces.size() > 0) {
     cout << "existing spaces in image:" << endl;
     // see if we can find space names
-    std::vector<std::string> spaces = db.get_named_spaces();
+    auto spaces = db.get_named_spaces();
+    //std::vector<std::string> spaces = db.get_named_spaces();
     
     for (auto sn: spaces) {
       auto ret = db.get_space_cardinality(sn);

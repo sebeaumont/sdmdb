@@ -257,7 +257,7 @@ namespace sdm {
   // create and manage named symbols by name -- space constructor does find_or_construct on segment
   // then database memoizes pointers to spaces to speed up symbol resolution
   
-  inline std::pair<sdm_status_t, manifold::space*>
+  std::pair<sdm_status_t, manifold::space*>
   manifold::ensure_space_by_name(const std::string& name) {
 
     // lookup in cache

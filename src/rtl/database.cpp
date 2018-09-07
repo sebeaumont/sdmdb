@@ -136,20 +136,21 @@ namespace sdm {
 
 
   /// batch superpose target with multiple symbols from source space
-
+  /*
   const sdm_status_t
   database::superpose(const std::string& ts,
                       const std::string& tn,
                       const std::string& ss,
-                      const std::vector<const std::string>& sns,
-                      const std::vector<const int> shifts,
+                      const std::vector<std::string&> sns,
+                      const std::vector<int> shifts,
                       const bool refcount) noexcept {
     
     // XXX new approach to keep allocations to minimum places in code
     //sdm_status_t sts = ensure_mutable_symbol
     return EUNIMPLEMENTED;
   }
-    
+  */
+  
   /// remove source from target -- source and target must exist else this is a noop.
   
   const sdm_status_t

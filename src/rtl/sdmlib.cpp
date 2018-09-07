@@ -1,7 +1,7 @@
 // implementation of sdmlib c interface library
 #include <errno.h>
-#include <cereal/archives/json.hpp>
-#include <cereal/types/vector.hpp>
+//#include <cereal/archives/json.hpp>
+//#include <cereal/types/vector.hpp>
 #include <sstream>
 
 #include "sdmlib.h"

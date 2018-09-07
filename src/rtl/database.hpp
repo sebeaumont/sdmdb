@@ -73,13 +73,13 @@ namespace sdm {
               const bool refcount = false) noexcept;
 
     /// batch superpose several symbols from source space
-
+    /*
     const sdm_status_t
     superpose(const std::string& ts, const std::string& tn,
-              const std::string& ss, const std::vector<const std::string>& sns,
-              const std::vector<const int> shifts,
+              const std::string& ss, const std::vector<std::string&> sns,
+              const std::vector<int> shifts,
               const bool refcount = false) noexcept;
-    
+    */
     /// subtract
 
     const sdm_status_t
