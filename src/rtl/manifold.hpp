@@ -124,7 +124,7 @@ namespace sdm {
     
     // xx plannning to use this for all semantic vector data in space for search etc.
     // might need a few types -- some will need to be gpu compatible.
-    typedef Eigen::Matrix<SDM_VECTOR_ELEMENT_TYPE, SDM_VECTOR_ELEMS, Eigen::Dynamic> matrix_t;
+    //typedef Eigen::Matrix<SDM_VECTOR_ELEMENT_TYPE, SDM_VECTOR_ELEMS, Eigen::Dynamic> matrix_t;
 
     
     /*
@@ -144,9 +144,13 @@ namespace sdm {
     load_elemental(const std::string& space,
                    const std::string& name,
                    sdm_sparse_t bits);
-    
-    /// apply a metric to get a subset of the space
-    
+
+    // XXX attempting c and c++ versions here
+    // XXX could inline all the c++ implementations and only build a C library
+
+    // apply a metric to get a subset of the space
+    /*
+    // ? move to sdmlib for c-api
     sdm_status_t
     get_topology(const std::string& targetspace,
                  const sdm_vector_t& vector,
@@ -157,26 +161,37 @@ namespace sdm {
                  const double mlb,
                  const double mub,
                  sdm_topology_t& top);
-      
-    /// get all points in a space
 
-    // XXX attempting c and c++ versions here
-    // XXX could inline all the c++ implementations and only build a C library
+    */
+    //
+    sdm_status_t
+    get_topology(const std::string& targetspace,
+                 const sdm_vector_t& vector,
+                 const sdm_size_t cub,
+                 const sdm_metric_t metric,
+                 const double dlb,
+                 const double dub,
+                 const double mlb,
+                 const double mub,
+                 topology& top);
     
+
+    /* move to sdmlib c api 
     sdm_status_t
     get_geometry(const std::string&,
                  const sdm_size_t,
-                 sdm_geometry_t); 
-
+                 sdm_geometry_t);
+    */
+    
+    /// get all points in a space
     sdm_status_t
     get_geometry(const std::string&,
                  geometry&);
 
-    /// search for symbols starting with prefix
+    /// search for symbols starting with prefix XXX move to database class
     
     typedef std::pair<manifold::space::symbol_iterator,
                       manifold::space::symbol_iterator> symbol_list;
-    
     std::pair<sdm_status_t, symbol_list>
     prefix_search(const std::string& space_name,
                   const std::string& symbol_prefix) noexcept;

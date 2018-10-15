@@ -63,11 +63,12 @@ BOOST_AUTO_TEST_CASE(rtl_api) {
   BOOST_REQUIRE(!sdm_error(card.first));
   BOOST_CHECK_EQUAL(card.second, 6);
 
-  sdm_point_t t[card.second];
-  sdm_status_t sts = db.get_geometry("names", card.second, t);
+  // 
+  database::geometry g;
+  sdm_status_t sts = db.get_geometry("names", g);
   BOOST_CHECK_EQUAL(sts, AOK);
 
-  // ...
+  // ... topo
   
 }
 

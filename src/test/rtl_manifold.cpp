@@ -61,12 +61,12 @@ BOOST_AUTO_TEST_CASE(rts_get_geometry) {
   BOOST_REQUIRE(!sdm_error(card.first));
   BOOST_CHECK_EQUAL(card.second, loaded);
 
-  sdm_point_t g[card.second];
+  database::geometry g;
   // some changes on allocation here we will expect caller to allocate
   // space but we will take a limit on vector caridnality for security.
   // also overload this method to a buffer (aliged pointer to an element_t not void*)
   // this will ease of cffi
-  sdm_status_t sts = rts.get_geometry(test_space1, card.second, g);
+  sdm_status_t sts = rts.get_geometry(test_space1, g);
   BOOST_CHECK_EQUAL(sts, AOK);
 
 }

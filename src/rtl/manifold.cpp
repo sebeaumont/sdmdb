@@ -113,15 +113,9 @@ namespace sdm {
   /// under construction
   //////////////////////////
 
-  sdm_status_t
-  manifold::get_geometry(const std::string& space,
-                         std::size_t n,
-                         sdm_geometry_t g) {
-      return EUNIMPLEMENTED;
-  }
-
   //
-  sdm_status_t manifold::get_geometry(const std::string& space, geometry& g) {
+  sdm_status_t
+  manifold::get_geometry(const std::string& space, geometry& g) {
 
     // step 1 get the space 
     manifold::space* sp = get_space_by_name(space);
@@ -193,8 +187,7 @@ namespace sdm {
   }
 
   
-  /// try doing some metrics
-  
+  /* XXX move to sdmlib c api
   sdm_status_t
   manifold::get_topology(const std::string& targetspace,
                          const sdm_vector_t& vector,
@@ -205,6 +198,22 @@ namespace sdm {
                          const double mlb,
                          const double mub,
                          sdm_topology_t& top) {
+    topology t;
+    return EUNIMPLEMENTED;
+  }
+  */
+  
+  // XXX let's get this working FFS!
+  sdm_status_t
+  manifold::get_topology(const std::string& targetspace,
+                         const sdm_vector_t& vector,
+                         const sdm_size_t cub,
+                         const sdm_metric_t metric,
+                         const double dlb,
+                         const double dub,
+                         const double mlb,
+                         const double mub,
+                         topology& top) {
     // XXX implement this now
     // step 1 get the space 
     manifold::space* sp = get_space_by_name(targetspace);

@@ -50,15 +50,7 @@ sdm_load_vector(const database_t db,
                                                  vector);
 }
 
-#include <errno.h>
-#include <cereal/archives/json.hpp>
-#include <cereal/types/vector.hpp>
-#include <sstream>
-
-#include "sdmlib.h"
-#include "database.hpp"
-
-using namespace molemind::sdm;
+#ifdef NOTDEF
 
 const status_t sdm_database(const char* filename,
                             size_t size,
@@ -331,3 +323,4 @@ const status_t sdm_vector_store(const vector_t v,
                                 vectordata_t vdata) {
   return EUNIMPLEMENTED;
 }
+#endif // NOTDEF
