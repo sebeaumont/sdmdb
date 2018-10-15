@@ -42,7 +42,7 @@ typedef struct sdm_point { const char* name; double density; unsigned refcount; 
 
 typedef sdm_point_t sdm_geometry_t [];    
 
-typedef unsigned sdm_sparse_t [];
+typedef unsigned sdm_sparse_t [SDM_VECTOR_BASIS_SIZE];
 
 typedef float sdm_prob_t; /* [0,1] */
 

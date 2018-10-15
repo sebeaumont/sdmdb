@@ -62,14 +62,16 @@ namespace sdm {
       
       ////////////////////////
       // implement symbol type
+
     public:
       typedef symbol<segment_manager_t, shared_string_t, void_allocator_t> symbol_t;
 
-    private:
-      
       // symbol_t dependant types
       typedef typename symbol_t::elemental_vector_t basis_t;
       typedef typename symbol_t::semantic_vector_t vector_t;
+
+    private:
+      
       
       // allocator for symbol_t
       
@@ -217,11 +219,12 @@ namespace sdm {
 
       /// more useful
       
-      inline const symbol_t& symbol_at(std::size_t i) {
+      inline symbol_t& symbol_at(std::size_t i) {
          symbol_by_index& symbols = index->template get<2>();
-         return symbols[i];
+         return const_cast<symbol_t&>(symbols[i]);
       }
 
+      
       ////////////////////////////
       /// lookup symbol by name //
       ////////////////////////////

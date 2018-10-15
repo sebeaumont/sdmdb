@@ -79,9 +79,10 @@ namespace sdm {
         return std::string(_name.begin(), _name.end());
       }
       
-      //inline const semantic_vector_t const_vector() const { return _vector; }
-      inline const semantic_vector_t vector() { return _vector; }
+      inline semantic_vector_t vector() { return _vector; }
 
+      inline const elemental_vector_t basis() const { return _basis; }
+      
       inline unsigned refcount() { return _refcount; }
 
       /// printer for symbol XXX might be useful to dump symbol representation to stream 

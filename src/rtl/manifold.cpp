@@ -113,7 +113,7 @@ namespace sdm {
   /// under construction
   //////////////////////////
 
-  //
+
   sdm_status_t
   manifold::get_geometry(const std::string& space, geometry& g) {
 
@@ -121,41 +121,12 @@ namespace sdm {
     manifold::space* sp = get_space_by_name(space);
     if (!sp) return ESPACE; // space not found
 
-    // obtain current cardinality of the space in case it is smaller than n
+    // obtain current cardinality of the space
     std::size_t card = sp->entries();
-
-    // create an array for the whole space!
-    
-    /*
-    #if HAVE_DISPATCH
-    //dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
-    //auto queue = dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0);
-    // xxx turns out this is much slower than uni threaded version!
-    dispatch_apply(m, DISPATCH_APPLY_AUTO, ^(std::size_t i) {
-        //dispatch_apply(m, queue, ^(std::size_t i) {
-        auto s = sp->symbol_at(i);
-        auto v = s.vector();
-        sdm_vector_t b;
-        // stack copy of vector... 
-        v.copyto(b.data());
-        g[i] = b;
-      });
-    
-    #elif HAVE_OPENMP
-    #pragma omp parallel for 
-    for (std::size_t i=0; i < m; ++i) {
-      auto s = sp->symbol_at(i);
-      auto v = s.vector();
-      sdm_vector_t b;
-      // stack copy of vector... 
-      v.copyto(b.data());
-      g[i] = b;      
-    }
-    */
 
     for (std::size_t i = 0; i < card; ++i) {
       auto s = sp->symbol_at(i);
-      g.push_back(point(s.name(), s.density(), s.refcount()));
+      g.push_back(point(s.name(), s.density()));
     }
 
     return AOK;
@@ -183,7 +154,16 @@ namespace sdm {
   manifold::load_elemental(const std::string& space,
                            const std::string& name,
                            sdm_sparse_t fp) {
-    return EUNIMPLEMENTED;
+    auto sp = get_space_by_name(space);
+    if (!sp) return ESPACE; // space not found
+    auto sym = sp->get_mutable_symbol_by_name(name, false);
+    if (!sym) return ESYMBOL;
+    auto e = sym->basis();
+    #pragma unroll
+    for (unsigned j=0; j < e.size(); ++j) {
+      fp[j] = e[j];
+    }
+    return AOK;
   }
 
   
@@ -202,56 +182,74 @@ namespace sdm {
     return EUNIMPLEMENTED;
   }
   */
+
   
   // XXX let's get this working FFS!
   sdm_status_t
   manifold::get_topology(const std::string& targetspace,
                          const sdm_vector_t& vector,
                          const sdm_size_t cub,
-                         const sdm_metric_t metric,
-                         const double dlb,
+                         //const sdm_metric_t metric,
+                         //const double dlb,
                          const double dub,
                          const double mlb,
-                         const double mub,
-                         topology& top) {
-    // XXX implement this now
+                         //const double mub,
+                         topology& topo) {
+
     // step 1 get the space 
     manifold::space* sp = get_space_by_name(targetspace);
     if (!sp) return ESPACE; // space not found
 
-    // obtain current cardinality of the space in case it is smaller than n
-    std::size_t card = sp->entries();
+    // obtain current cardinality of the space
+    std::size_t m = sp->entries();
 
-    // create an array for the whole space!
+    // create a bitvector from input
+    svector target(vector);
     
-    /*
+    // create an array for work!
+    auto work = new double[m*3];
+
+
     #if HAVE_DISPATCH
-    //dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
-    //auto queue = dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0);
-    // xxx turns out this is much slower than uni threaded version!
     dispatch_apply(m, DISPATCH_APPLY_AUTO, ^(std::size_t i) {
-        //dispatch_apply(m, queue, ^(std::size_t i) {
-        auto s = sp->symbol_at(i);
-        auto v = s.vector();
-        sdm_vector_t b;
-        // stack copy of vector... 
-        v.copyto(b.data());
-        g[i] = b;
+        auto v = sp->symbol_at(i).vector();
+        work[i*3] = v.density();
+        work[i*3+1] = target.similarity(v);
+        work[i*3+2] = target.overlap(v);
       });
     
     #elif HAVE_OPENMP
     #pragma omp parallel for 
     for (std::size_t i=0; i < m; ++i) {
-      auto s = sp->symbol_at(i);
-      auto v = s.vector();
-      sdm_vector_t b;
-      // stack copy of vector... 
-      v.copyto(b.data());
-      g[i] = b;      
+      auto v = sp->symbol_at(i).vector();
+      work[i*3] = v.density();
+      work[i*3+1] = target.similarity(v);
+      work[i*3+2] = target.overlap(v);
     }
-    */
+    #endif
+
+        
+    // filter work array on density and similarity bounds
+    for (std::size_t i=0; i < m; ++i) {
+      double r = work[i*3];
+      double s = work[i*3+1];
+      double o = work[i*3+2];
+      // apply p-d-filter
+      if (r <= dub && s >= mlb) {
+        topo.push_back(neighbour(sp->symbol_at(i).name(), r, s, o));
+      }
+    }
+
+    delete[] work;
     
-    return EUNIMPLEMENTED;
+    // sort the scores in similarity order
+    sort(topo.begin(), topo.end());
+    const std::size_t ns = topo.size();
+
+    // chop off uneeded tail
+    topo.erase(topo.begin() + ((cub < ns) ? cub : ns), topo.end());
+    return AOK;
+    
   }
   
   

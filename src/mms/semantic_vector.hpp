@@ -41,7 +41,7 @@ namespace sdm {
       semantic_vector(const void_allocator_t& a) : vector_base_t(a) {
         this->reserve(n_elements);
         #pragma unroll
-        //#pragma clang loop vectorize(enable) interleave(enable)
+        #pragma clang loop vectorize(enable) interleave(enable)
         for (unsigned i = 0; i < n_elements; ++i) this->push_back(0);
       }
 

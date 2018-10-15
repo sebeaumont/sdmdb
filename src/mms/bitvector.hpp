@@ -28,24 +28,7 @@ namespace sdm {
         this->reserve(n_elements);
       }
 
-      /*
-      bitvector(const bitvector& other, const allocator& a) {
-        #pragma unroll
-        #pragma clang loop vectorize(enable) interleave(enable)
-        for (unsigned i=0; i < n_elements; ++i) {
-          (*this)[i] = other[i];
-        }
-      }
-      */
-      /*
-      bitvector(const bitvector&& other) {
-
-      }
-      */
-      /*
-      bitvector(const vector_t v) {
-      }
-      */
+      
       /// printer 
       friend std::ostream& operator<<(std::ostream& os, const bitvector& v) {
         for (unsigned i=0; i < n_elements; ++i) os << v[i];
@@ -117,7 +100,7 @@ namespace sdm {
       
       /// semantic union
       
-      inline std::size_t countsum(const bitvector& v) {
+      inline const std::size_t countsum(const bitvector& v)  {
         std::size_t count = 0;
         #pragma unroll
         #pragma clang loop vectorize(enable) interleave(enable)
@@ -134,7 +117,7 @@ namespace sdm {
     
       /// semantic similarity
       
-      inline double similarity(const bitvector& v) {
+      inline const double similarity(const bitvector& v) {
         // inverse of the normalized distance
         return 1.0 - (double) distance(v)/dimensions;
       }
@@ -142,7 +125,7 @@ namespace sdm {
     
       /// semantic overlap
       
-      inline double overlap(const bitvector& v) {
+      inline const double overlap(const bitvector& v) {
         // ratio of common bits to max common
         return (double) inner(v)/dimensions;
       }

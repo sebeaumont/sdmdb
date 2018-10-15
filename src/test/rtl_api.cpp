@@ -66,10 +66,26 @@ BOOST_AUTO_TEST_CASE(rtl_api) {
   // 
   database::geometry g;
   sdm_status_t sts = db.get_geometry("names", g);
-  BOOST_CHECK_EQUAL(sts, AOK);
+  BOOST_REQUIRE(!sdm_error(sts));
 
-  // ... topo
+
+  // topo...
   
+  database::topology t;
+  // TODO
+  
+  // vector load ...
+  sdm_vector_t v;
+  sts = db.load_vector("names", "Beaumont", v);
+  BOOST_REQUIRE(!sdm_error(sts));
+
+  // load elemental...
+  
+  sdm_sparse_t e;
+  sts = db.load_elemental("names", "Beaumont", e);
+  BOOST_REQUIRE(!sdm_error(sts));
+  
+  // vector store...
 }
 
 

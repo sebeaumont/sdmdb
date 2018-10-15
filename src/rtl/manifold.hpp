@@ -3,13 +3,13 @@
 #include <boost/interprocess/managed_mapped_file.hpp>
 #include <map>
 
-#include <Eigen/Dense>
+//#include <Eigen/Dense>
 
 #include "sdmconfig.h"
 #include "sdmtypes.h"
 
 #include "../mms/symbol_space.hpp"
-#include "../mms/bitvector.hpp"
+#include "../mms/ephemeral_vector.hpp"
 
 
 namespace sdm {
@@ -76,24 +76,20 @@ namespace sdm {
     
       /// constructor copy of symbol space data
       explicit
-      point(const std::string& v,
-            const double d,
-            const unsigned c) : name(v),
-                                density(d),
-                                count(c) {}
-      
-    };
+      point(const std::string& v, const double d) : name(v), density(d) {}
+     };
     
     
     struct neighbour : public point {
       
-      double metric;
+      double similarity;
+      double overlap;
       
       explicit
       neighbour(const std::string& v,
                 const double d,
-                const unsigned c,
-                const double m) : point(v, d, c), metric(m) {}
+                const double s,
+                const double o) : point(v, d), similarity(s), overlap(o) {}
       
       
       /// comparison operators for sorting w.r.t metric
@@ -101,19 +97,20 @@ namespace sdm {
       // to a given vector
       
       bool operator< (const neighbour& s) const {
-        return metric > s.metric;
+        return similarity > s.similarity;
       }
       
       bool operator==(const neighbour& s) const {
-        return name == s.name && metric == s.metric;
+        return name == s.name && similarity == s.similarity;
       }
       
       bool operator!=(const neighbour& s) const {
-        return name != s.name || metric != s.metric;
+        return name != s.name || similarity != s.similarity;
       }
-      
+
+      // get rid of this debug
       friend std::ostream& operator<<(std::ostream& os, neighbour& p) {
-        os <<  p.name << "\t" << p.metric << "\t" << p.density;
+        os <<  p.name << "\t" << p.similarity << "\t" << p.overlap << "\t" << p.density;
         return os;
       }
       
@@ -145,6 +142,8 @@ namespace sdm {
                    const std::string& name,
                    sdm_sparse_t bits);
 
+
+
     // XXX attempting c and c++ versions here
     // XXX could inline all the c++ implementations and only build a C library
 
@@ -155,7 +154,7 @@ namespace sdm {
     get_topology(const std::string& targetspace,
                  const sdm_vector_t& vector,
                  const sdm_size_t cub,
-                 const sdm_metric_t metric,
+                 //const sdm_metric_t metric,
                  const double dlb,
                  const double dub,
                  const double mlb,
@@ -163,18 +162,21 @@ namespace sdm {
                  sdm_topology_t& top);
 
     */
+    // 
+    typedef mms::ephemeral_vector<SDM_VECTOR_ELEMENT_TYPE,
+                                  SDM_VECTOR_ELEMS,
+                                  space::vector_t> svector;
     //
     sdm_status_t
     get_topology(const std::string& targetspace,
                  const sdm_vector_t& vector,
                  const sdm_size_t cub,
-                 const sdm_metric_t metric,
-                 const double dlb,
+                 //const sdm_metric_t metric,
+                 //const double dlb,
                  const double dub,
                  const double mlb,
-                 const double mub,
+                 //const double mub,
                  topology& top);
-    
 
     /* move to sdmlib c api 
     sdm_status_t
