@@ -113,18 +113,24 @@ namespace sdm {
   /// under construction
   //////////////////////////
 
-  sdm_status_t manifold::get_geometry(const std::string& space, std::size_t n, sdm_geometry_t g) {
-    return EUNIMPLEMENTED;
+  sdm_status_t
+  manifold::get_geometry(const std::string& space,
+                         std::size_t n,
+                         sdm_geometry_t g) {
+      return EUNIMPLEMENTED;
   }
-  
+
+  //
   sdm_status_t manifold::get_geometry(const std::string& space, geometry& g) {
 
     // step 1 get the space 
     manifold::space* sp = get_space_by_name(space);
     if (!sp) return ESPACE; // space not found
 
-    // obtain current cardinality of the space in case it is smaller than n!
+    // obtain current cardinality of the space in case it is smaller than n
     std::size_t card = sp->entries();
+
+    // create an array for the whole space!
     
     /*
     #if HAVE_DISPATCH
@@ -199,7 +205,43 @@ namespace sdm {
                          const double mlb,
                          const double mub,
                          sdm_topology_t& top) {
-    //
+    // XXX implement this now
+    // step 1 get the space 
+    manifold::space* sp = get_space_by_name(targetspace);
+    if (!sp) return ESPACE; // space not found
+
+    // obtain current cardinality of the space in case it is smaller than n
+    std::size_t card = sp->entries();
+
+    // create an array for the whole space!
+    
+    /*
+    #if HAVE_DISPATCH
+    //dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
+    //auto queue = dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0);
+    // xxx turns out this is much slower than uni threaded version!
+    dispatch_apply(m, DISPATCH_APPLY_AUTO, ^(std::size_t i) {
+        //dispatch_apply(m, queue, ^(std::size_t i) {
+        auto s = sp->symbol_at(i);
+        auto v = s.vector();
+        sdm_vector_t b;
+        // stack copy of vector... 
+        v.copyto(b.data());
+        g[i] = b;
+      });
+    
+    #elif HAVE_OPENMP
+    #pragma omp parallel for 
+    for (std::size_t i=0; i < m; ++i) {
+      auto s = sp->symbol_at(i);
+      auto v = s.vector();
+      sdm_vector_t b;
+      // stack copy of vector... 
+      v.copyto(b.data());
+      g[i] = b;      
+    }
+    */
+    
     return EUNIMPLEMENTED;
   }
   

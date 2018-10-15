@@ -32,6 +32,8 @@ typedef size_t sdm_size_t;
 
 /* C friendly API types */
 
+typedef void* database_t;
+
 typedef char* sdm_name_t;
 
 typedef SDM_VECTOR_ELEMENT_TYPE sdm_vector_t[SDM_VECTOR_ELEMS];

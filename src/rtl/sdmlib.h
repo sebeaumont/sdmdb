@@ -8,12 +8,6 @@
 #include "sdmconfig.h"
 #include "sdmtypes.h"
 
-/*
- * can we do better than void* and a static_cast at runtime?
-*/
-
-typedef void* database_t;
-
 /* Functions in the API */
 
 #ifdef __cplusplus
