@@ -69,15 +69,19 @@ BOOST_AUTO_TEST_CASE(rtl_api) {
   BOOST_REQUIRE(!sdm_error(sts));
 
 
-  // topo...
-  
-  database::topology t;
-  // TODO
-  
   // vector load ...
   sdm_vector_t v;
   sts = db.load_vector("names", "Beaumont", v);
   BOOST_REQUIRE(!sdm_error(sts));
+
+  // get a 
+  // topo...
+    
+  database::topology t;
+  t.reserve(20);
+  sts = db.get_topology("names", v, 10, 0.5, 0.5, t);
+  BOOST_REQUIRE(!sdm_error(sts));
+  BOOST_REQUIRE(t.size() > 2);
 
   // load elemental...
   

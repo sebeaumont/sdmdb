@@ -15,7 +15,7 @@ namespace sdm {
               class base_t=std::vector<element_t>>
 
     
-    struct ephemeral_vector :public std::vector<element_t> {
+    struct ephemeral_vector :public base_t {
 
       static constexpr std::size_t dimensions =  n_elements * sizeof(element_t) * CHAR_BITS;
       
@@ -29,7 +29,7 @@ namespace sdm {
         this->reserve(n_elements);
         #pragma unroll
         for (unsigned i=0; i < n_elements; ++i)
-          this->at(i) = other[i];
+          this->push_back(other[i]);
       }
 
       /////////////////////////////////////////////

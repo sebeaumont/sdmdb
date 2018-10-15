@@ -236,7 +236,8 @@ namespace sdm {
       double o = work[i*3+2];
       // apply p-d-filter
       if (r <= dub && s >= mlb) {
-        topo.push_back(neighbour(sp->symbol_at(i).name(), r, s, o));
+        neighbour n(sp->symbol_at(i).name(), r, s, o);
+        topo.push_back(n);
       }
     }
 
