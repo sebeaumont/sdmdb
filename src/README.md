@@ -1,7 +1,8 @@
 # SDMLIB
 
 This is the modular version where training on disk database and
-learning engine has been split from the search/query engine.
+learning engine has been split out from the search/query engine.
+Though not yet entirely to my satisfaction.
 
 
 ## Sources:

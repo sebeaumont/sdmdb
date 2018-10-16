@@ -1,7 +1,7 @@
 SDMLIB - Sparse Distributed Memory Database 
 ===========================================
 
-Unreleased Apha version -- Planned Public Release Milestone July 2018
+Unreleased Apha version -- Planned Public Release Milestone December 2018
 
 I am currently refactoring the architecture of the API and library
 into two parts, the database and the query engine. This is to allow a
@@ -56,14 +56,11 @@ Requires doxygen
 doxygen
 ```
 
-Will generate doc -- N.B. a C++ library is not currently built for
-standalone C++ clients as the entire library is more or less template
-based. This is unlikely to change unless this thing proves to be of
-use outside beyond scope of the research it now supports. 
-
 The c library is a very cut down shim of the full capability of the
-C++ implementation and serves the ad-hoc needs of the FFI. 
-
+C++ implementation and serves the ad-hoc needs of the FFI indeed this
+may likely be the minimal specification that is required and all the
+other methods in the C++ API may be elided in due course. Indeed we
+may decline to even build a C++ library in future.
 
 
 Project contact: [Simon Beaumont](mailto:s@molemind.net) 
