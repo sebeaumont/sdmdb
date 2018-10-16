@@ -64,8 +64,7 @@ BOOST_AUTO_TEST_CASE(insert_vector) {
   std::cout << mms << std::endl;
   //BOOST_TEST_MESSAGE(msg);
   // 5. retrieve vector
-  // TODO check for reference count
-  BOOST_REQUIRE(mms.get_symbol_by_name(v0, true));
+  BOOST_REQUIRE(mms.get_symbol_by_name(v0));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

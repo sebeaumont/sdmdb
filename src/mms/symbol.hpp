@@ -45,7 +45,7 @@ namespace sdm {
 
 
       shared_string_t _name;
-      unsigned _refcount;
+      //unsigned _refcount;
       sdm_prob_t _dither;
       
     private:
@@ -62,7 +62,6 @@ namespace sdm {
              const allocator_t& a,
              const sdm_prob_t p)
         : _name(s, a),
-          _refcount(0),
           _dither(p),
           _basis(f, elemental_bits, a),
           _vector(a) {}
@@ -83,7 +82,6 @@ namespace sdm {
 
       inline const elemental_vector_t basis() const { return _basis; }
       
-      inline unsigned refcount() { return _refcount; }
 
       /// printer for symbol XXX might be useful to dump symbol representation to stream 
       

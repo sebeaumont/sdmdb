@@ -76,8 +76,7 @@ namespace sdm {
                       const std::string& tn,
                       const std::string& ss,
                       const std::string& sn,
-                      const int shifted,
-                      const bool refcount) noexcept {
+                      const int shifted) noexcept {
     
     // assume all symbols are present
     sdm_status_t state = AOLD;
@@ -101,10 +100,8 @@ namespace sdm {
     // XXX
     
     // get source symbol
-    // TODO: optionally generate a new version or shifted basis
-    // NB: using mutable symbol reference offers a subtantial speed up when reference counting.
-    //boost::optional<const space::symbol&> s = ssp.second->get_symbol_by_name(sn, refcount);
-    boost::optional<space::symbol_t&> s = ssp.second->get_mutable_symbol_by_name(sn, refcount);
+
+    boost::optional<space::symbol_t&> s = ssp.second->get_mutable_symbol_by_name(sn);
 
     if (!s) {
       // try inserting source symbol
@@ -120,7 +117,7 @@ namespace sdm {
     // CAVEAT: this must follow any insertions in the space
     // as any insert to index MAY invalidate vector or symbol pointers...
     
-    boost::optional<space::symbol_t&> t = tsp.second->get_mutable_symbol_by_name(tn, false);
+    boost::optional<space::symbol_t&> t = tsp.second->get_mutable_symbol_by_name(tn);
     
     if (!t) {
       // try inserting the target symbol
@@ -163,13 +160,13 @@ namespace sdm {
     auto target_sp = get_space_by_name(tvs);
     if (!target_sp) return ESPACE;
 
-    auto target_sym = target_sp->get_mutable_symbol_by_name(tvn, false);
+    auto target_sym = target_sp->get_mutable_symbol_by_name(tvn);
     if (!target_sym) return ESYMBOL;
     
     auto source_sp = get_space_by_name(svs);
     if (!source_sp) return ESPACE;
 
-    auto source_sym = source_sp->get_symbol_by_name(svn, false); // arguable decref ;-)
+    auto source_sym = source_sp->get_symbol_by_name(svn); 
     if (!source_sym) return ESYMBOL;
 
     // effect
@@ -214,13 +211,12 @@ namespace sdm {
   inline std::pair<sdm_status_t, const database::space::symbol_t*>
   database::ensure_symbol(const std::string& spacename,
                           const std::string& name,
-                          const sdm_prob_t dither,
-                          const bool refcount) {
+                          const sdm_prob_t dither) {
 
     auto sp = ensure_space_by_name(spacename);
     if (sdm_error(sp.first)) return std::make_pair(sp.first, nullptr);
     
-    auto s = sp.second->get_symbol_by_name(name, refcount);
+    auto s = sp.second->get_symbol_by_name(name);
     
     if (!s) {
       // try inserting new symbol

@@ -69,8 +69,7 @@ namespace sdm {
     const sdm_status_t
     superpose(const std::string& ts, const std::string& tn,
               const std::string& ss, const std::string& sn,
-              const int shift = 0,
-              const bool refcount = false) noexcept;
+              const int shift = 0) noexcept;
 
     /// batch superpose several symbols from source space
     /*
@@ -114,14 +113,12 @@ namespace sdm {
     inline std::pair<sdm_status_t, space::symbol_t&>
     ensure_mutable_symbol(const std::string& space,
                           const std::string& name,
-                          const sdm_prob_t dither = 1.0,
-                          const bool refcount = false);
+                          const sdm_prob_t dither = 1.0);
 
     inline std::pair<sdm_status_t, const space::symbol_t*>
     ensure_symbol(const std::string&,
                   const std::string&,
-                  const sdm_prob_t dither = 1.0,
-                  const bool refcount = false);
+                  const sdm_prob_t dither = 1.0);
 
   private:
     

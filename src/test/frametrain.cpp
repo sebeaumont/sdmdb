@@ -292,7 +292,7 @@ int main(int argc, const char** argv) {
         for (auto first = termset.begin(); first != termset.end(); ++first) {
           for (auto next = std::next(first); next != termset.end(); ++next) {
             // assert: first R next
-            db.superpose(termspace, *first, termspace, *next, diffterms, refcount);
+            db.superpose(termspace, *first, termspace, *next, diffterms);
             // if aRb => bRa then reify next R first
             if (symmetric) db.superpose(termspace, *next, termspace, *first);
           }

@@ -232,25 +232,13 @@ namespace sdm {
       typedef typename symbol_table_t::template nth_index<0>::type symbol_by_name;
 
       inline boost::optional<const symbol_t&>
-      get_symbol_by_name(const std::string& k, bool refcount) {
+      get_symbol_by_name(const std::string& k) {
         symbol_by_name& name_idx = index->template get<0>();
         typename symbol_by_name::iterator i = name_idx.find(shared_string(k));
         if (i == name_idx.end()) return boost::none;
-        else if (refcount) {
-          index->modify(i, bump_reference());
-        } 
-        return *i;
+        else return *i;
       }
 
-      /// functor to bump reference count using index modify with const reference to symbol
-      
-      struct bump_reference {
-        bump_reference(void) {
-        }
-        void operator() (symbol_t& s) {
-          s._refcount++;
-        }
-      };
         
       /* CAUTION non const reference to symbol can allow callers to
          side-effect symbol state -- must not alter index state or
@@ -259,12 +247,11 @@ namespace sdm {
          learning operations */
       
       inline boost::optional<symbol_t&>
-      get_mutable_symbol_by_name(const std::string& k, bool refcount) {
+      get_mutable_symbol_by_name(const std::string& k) {
         symbol_by_name& name_idx = index->template get<0>();
         typename symbol_by_name::iterator i = name_idx.find(shared_string(k));
         if (i == name_idx.end()) return boost::none;
         symbol_t& s = const_cast<symbol_t&>(*i);
-        if (refcount) s._refcount++;
         return s;
       }
 
