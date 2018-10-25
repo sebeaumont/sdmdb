@@ -21,6 +21,7 @@
 // XXX 
 #include "../rtl/database.hpp"
 
+#define B2MB(b_) ((double)(b_)/(1024*1024))
 
 // a wall clock timer with microsecond resolution
 
@@ -284,7 +285,7 @@ int main(int argc, const char** argv) {
           std::ofstream outf(cv[1] + ".dat");
           if (outf.good()) {
             for (database::point p : g) {
-              outf << p.name << "\t" << p.density << "\t" << p.count << "\n";
+              outf << p.name << "\t" << p.density << "\n";
             }
             outf.close();
           }
@@ -359,6 +360,9 @@ int main(int argc, const char** argv) {
           double o = rts.overlap(sym1.front(), sym1.back(), sym2.front(), sym2.back()).second;
           std::cout << t << o << std::endl;
         }
+
+        // TODO toppology lookup and render...
+
         
       } else std::cout << "! syntax error:" << input << std::endl;
 
@@ -382,13 +386,10 @@ int main(int argc, const char** argv) {
     std::cout << prompt;  
   }
   
-  // goodbye from me and goodbye from him...
-  std::cout << std::endl
-            << (rts.check_heap_sanity() ? ":-)" : ":-(")
-            << " heap size: " << (float) rts.heap_size() / (1024*1024)
-            << " free: " << (float) rts.free_heap() / (1024*1024)
-            << std::endl << "...bye" << std::endl;
-  
+  std::cout << heapfile << ": " << (rts.check_heap_sanity() ? "✔" : "✘")
+            << " heap size: "   << B2MB(rts.heap_size())
+            << " free: "        << B2MB(rts.free_heap()) << std::endl;
+
   return 0;
   
 }

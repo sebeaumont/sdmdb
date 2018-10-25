@@ -66,7 +66,7 @@ namespace sdm {
 
       /// semantic distance is the Hamming distance
       
-      inline const std::size_t distance(const bitvector& v) {
+      inline const std::size_t distance(const bitvector& v) const {
         std::size_t distance = 0;
         #pragma unroll
         #pragma clang loop vectorize(enable) interleave(enable)
@@ -83,7 +83,7 @@ namespace sdm {
     
       /// inner product is the commonality/overlap
       
-      inline const std::size_t inner(const bitvector& v) {
+      inline const std::size_t inner(const bitvector& v) const {
         std::size_t count = 0;
         #pragma unroll
         #pragma clang loop vectorize(enable) interleave(enable)
@@ -100,7 +100,7 @@ namespace sdm {
       
       /// semantic union
       
-      inline const std::size_t countsum(const bitvector& v)  {
+      inline const std::size_t countsum(const bitvector& v)  const {
         std::size_t count = 0;
         #pragma unroll
         #pragma clang loop vectorize(enable) interleave(enable)
@@ -117,7 +117,7 @@ namespace sdm {
     
       /// semantic similarity
       
-      inline const double similarity(const bitvector& v) {
+      inline const double similarity(const bitvector& v) const {
         // inverse of the normalized distance
         return 1.0 - (double) distance(v)/dimensions;
       }
@@ -125,7 +125,7 @@ namespace sdm {
     
       /// semantic overlap
       
-      inline const double overlap(const bitvector& v) {
+      inline const double overlap(const bitvector& v) const {
         // ratio of common bits to max common
         return (double) inner(v)/dimensions;
       }

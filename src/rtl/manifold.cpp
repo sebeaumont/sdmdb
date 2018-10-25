@@ -166,35 +166,91 @@ namespace sdm {
     return AOK;
   }
 
+
+  // no need to be copying vectordata around for this.
   
-  /* XXX move to sdmlib c api
   sdm_status_t
   manifold::get_topology(const std::string& targetspace,
-                         const sdm_vector_t& vector,
-                         const sdm_size_t cub,
-                         const sdm_metric_t metric,
-                         const double dlb,
+                         const std::string& sourcespace,
+                         const std::string& vectorname,
+                         topology& topo,
                          const double dub,
                          const double mlb,
-                         const double mub,
-                         sdm_topology_t& top) {
-    topology t;
+                         const sdm_size_t cub) {
+    
+    // step 1 get the space 
+    manifold::space* tsp = get_space_by_name(targetspace);
+    if (!tsp) return ESPACE; // space not found
+
+    // obtain current cardinality of the space
+    std::size_t m = tsp->entries();
+
+    // get source space
+    manifold::space* ssp = get_space_by_name(targetspace);
+    if (!ssp) return ESPACE; // space not found
+    
+    auto sym = ssp->get_mutable_symbol_by_name(vectorname);
+    if (!sym) return ESYMBOL;
+    
+    auto target = sym->vector();
+    
+    // create an array for work!
+    auto work = new double[m*3];
+
+
+    #if HAVE_DISPATCH
+    dispatch_apply(m, DISPATCH_APPLY_AUTO, ^(std::size_t i) {
+        auto v = ssp->symbol_at(i).vector();
+        work[i*3] = v.density();
+        work[i*3+1] = target.similarity(v);
+        work[i*3+2] = target.overlap(v);
+      });
+    
+    #elif HAVE_OPENMP
+    #pragma omp parallel for 
+    for (std::size_t i=0; i < m; ++i) {
+      auto v = ssp->symbol_at(i).vector();
+      work[i*3] = v.density();
+      work[i*3+1] = target.similarity(v);
+      work[i*3+2] = target.overlap(v);
+    }
+    #endif
+
+        
+    // filter work array on density and similarity bounds
+    for (std::size_t i=0; i < m; ++i) {
+      double r = work[i*3];
+      double s = work[i*3+1];
+      double o = work[i*3+2];
+      // apply p-d-filter
+      if (r <= dub && s >= mlb) {
+        neighbour n(ssp->symbol_at(i).name(), r, s, o);
+        topo.push_back(n);
+      }
+    }
+
+    delete[] work;
+    
+    // sort the scores in similarity order
+    sort(topo.begin(), topo.end());
+    const std::size_t ns = topo.size();
+
+    // chop off uneeded tail
+    topo.erase(topo.begin() + ((cub < ns) ? cub : ns), topo.end());
+    return AOK;
+    
+    
     return EUNIMPLEMENTED;
   }
-  */
-
   
   // XXX let's get this working FFS!
   sdm_status_t
   manifold::get_topology(const std::string& targetspace,
                          const sdm_vector_t& vector,
-                         const sdm_size_t cub,
-                         //const sdm_metric_t metric,
-                         //const double dlb,
+                         topology& topo,
                          const double dub,
                          const double mlb,
-                         //const double mub,
-                         topology& topo) {
+                         const sdm_size_t cub) {
 
     // step 1 get the space 
     manifold::space* sp = get_space_by_name(targetspace);
@@ -203,7 +259,7 @@ namespace sdm {
     // obtain current cardinality of the space
     std::size_t m = sp->entries();
 
-    // create a bitvector from input
+    // create a bitvector from input yet another copy! 
     svector target(vector);
     
     // create an array for work!
