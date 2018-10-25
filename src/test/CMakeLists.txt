@@ -53,5 +53,8 @@ add_executable (frametrain frametrain.cpp)
 target_link_libraries(frametrain ${Boost_LIBRARIES})
 target_link_libraries(frametrain sdmdb)
 
+add_executable (affinity affinity.cpp)
+target_link_libraries(affinity ${Boost_LIBRARIES})
+target_link_libraries(affinity sdmdb)
 
 

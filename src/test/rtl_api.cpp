@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(rtl_api) {
     
   database::topology t;
   t.reserve(20);
-  sts = db.get_topology("names", v, 10, 0.5, 0.5, t);
+  sts = db.get_topology("names", v, t);
   BOOST_REQUIRE(!sdm_error(sts));
   BOOST_REQUIRE(t.size() > 2);
 

@@ -72,7 +72,6 @@ namespace sdm {
     
       std::string name;
       double density;
-      unsigned count;
     
       /// constructor copy of symbol space data
       explicit
@@ -123,14 +122,6 @@ namespace sdm {
     // might need a few types -- some will need to be gpu compatible.
     //typedef Eigen::Matrix<SDM_VECTOR_ELEMENT_TYPE, SDM_VECTOR_ELEMS, Eigen::Dynamic> matrix_t;
 
-    
-    /*
-      XXX might do serialized json versions of some API calls using cereal.
-    status_t
-    get_symbol(const std::string& space,
-               const std::string& name,
-               std::string& json);
-    */
 
     sdm_status_t
     load_vector(const std::string& space,
@@ -162,7 +153,17 @@ namespace sdm {
                  sdm_topology_t& top);
 
     */
-    // 
+    sdm_status_t
+    get_topology(const std::string& targetspace,
+                 const std::string& sourcespace,
+                 const std::string& vectorname,
+                 topology& topo,
+                 const double dub = 0.5,
+                 const double mlb = 0.5,
+                 const sdm_size_t cub = -1);
+
+    
+    // wrapper type for non-heap allocated vectors  
     typedef mms::ephemeral_vector<SDM_VECTOR_ELEMENT_TYPE,
                                   SDM_VECTOR_ELEMS,
                                   space::vector_t> svector;
@@ -170,13 +171,10 @@ namespace sdm {
     sdm_status_t
     get_topology(const std::string& targetspace,
                  const sdm_vector_t& vector,
-                 const sdm_size_t cub,
-                 //const sdm_metric_t metric,
-                 //const double dlb,
-                 const double dub,
-                 const double mlb,
-                 //const double mub,
-                 topology& top);
+                 topology& top,
+                 const double dub = 0.5,
+                 const double mlb = 0.5,
+                 const sdm_size_t cub = -1);
 
     /* move to sdmlib c api 
     sdm_status_t
