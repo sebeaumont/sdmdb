@@ -6,6 +6,7 @@
  ***************************************************************************/
 
 #include <iostream>
+#include <iomanip>
 #include <fstream>
 #include <boost/algorithm/string.hpp>
 #include <boost/date_time/posix_time/ptime.hpp>
@@ -17,19 +18,19 @@
 #include <boost/optional.hpp>
 #include <boost/optional/optional_io.hpp>
 
-// we are really developing this
+// XXX 
 #include "../rtl/database.hpp"
-// and this temporary vectors
-#include "../mms/ephemeral_vector.hpp"
 
+#define B2MB(b_) ((double)(b_)/(1024*1024))
 
-// wall clock timer
+// a wall clock timer with microsecond resolution
 
 class timer {
   
 public:
 
-  timer(const std::string& name) : name(name), start(clock_t::local_time()) {}
+  // set the start time at construction
+  timer() : start(clock_t::local_time()) {}
 
   const std::size_t get_elapsed_micros() {
     
@@ -38,8 +39,9 @@ public:
     return d.total_microseconds();
   }
 
+  // ostream printer
   friend std::ostream& operator<<(std::ostream& os, timer& t) {
-    os << "[" << t.get_elapsed_micros() << "] ";
+    os << "[" << std::dec << std::setw(8) << std::setfill(' ') <<  t.get_elapsed_micros() << "] ";
     return os;
   }
 
@@ -49,7 +51,6 @@ private:
   typedef boost::date_time::microsec_clock<time_t> clock_t;
   typedef boost::posix_time::time_duration elapsed_t;
   
-  std::string name;
   time_t start;
 };
 
@@ -57,6 +58,7 @@ private:
 // tokenzier for input line
 
 void tokenize_command(const std::string& s, std::vector<std::string>& o) {
+
   typedef boost::escaped_list_separator<char> ls_t;
   typedef boost::tokenizer<ls_t> toz_t;
   
@@ -70,6 +72,45 @@ void tokenize_command(const std::string& s, std::vector<std::string>& o) {
   }
 }
 
+
+// hack tokenizer for symbols
+
+bool parse_symbol(const std::string& s,
+                  const std::string& prefix,
+                  std::list<std::string>& parsed) {
+  
+  typedef boost::char_separator<char> sep_t;
+  typedef boost::tokenizer<sep_t> toz_t; 
+
+  sep_t sep(":");
+  toz_t tok(s, sep);
+  
+  for(toz_t::iterator j = tok.begin(); j != tok.end(); ++j) {
+    std::string t(*j);
+    boost::trim(t);
+    boost::replace_all(t, "*", ""); // ho hum wild card!
+    parsed.push_back(t);
+  }
+
+  // XXX
+  //for (auto p : parsed) {
+  //  std::cout << "|" << p << std::endl;
+  //}
+  
+  if (parsed.size() == 1) {
+    // intension is to default the space name as prefix but could be just space
+    parsed.push_front(prefix);
+    return true;
+  }
+  
+  if (parsed.size() == 2) return true;
+  else {
+    std::cout << "cannot parse symbol: " << s << std::endl;
+    return false;
+  }
+}
+  
+  
 // quck and dirty file existence check avoiding boost::system/filesystem libraries
 
 inline bool file_exists(const char *path) {
@@ -81,31 +122,7 @@ inline bool file_exists(std::string& path) {
 }
 
 
-using namespace molemind::sdm;
-
-// how to subvert our encapsulation with leaky abstractions... ;-)
-// and test the evolving API...
-
-static inline boost::optional<database::space::vector&> get_vector(database& db,
-                                                                   const std::string& space_name,
-                                                                   const std::string& name) {
-  auto space = db.get_space_by_name(space_name);
-  if (space)
-    return space->get_vector_by_name(name);
-  else
-    return boost::none;
-}
-
-static inline boost::optional<const database::space::symbol&> get_symbol(database& db,
-                                                                         const std::string& space_name,
-                                                                         const std::string& name) {
-  auto space = db.get_space_by_name(space_name);
-  if (space)
-    return space->get_symbol_by_name(name);
-  else
-    return boost::none;
-}
-
+using namespace sdm;
 
 
 ////////////////////////////////
@@ -114,7 +131,7 @@ static inline boost::optional<const database::space::symbol&> get_symbol(databas
 int main(int argc, const char** argv) {
 
   namespace po = boost::program_options;
-  using namespace molemind::sdm;
+  using namespace sdm;
   
   // command line options
     
@@ -123,16 +140,20 @@ int main(int argc, const char** argv) {
   
   po::options_description desc("Allowed options");
   po::positional_options_description p;
-  p.add("heap", -1);
+  p.add("heapimage", -1);
 
+  std::string default_space;
+  
   desc.add_options()
     ("help", "SDM runtime test utility")
     ("heapsize", po::value<std::size_t>(&initial_size)->default_value(700),
      "initial size of heap in Mbytes")
     ("maxheap", po::value<std::size_t>(&maximum_size)->default_value(700),
      "maximum size of heap in Mbytes")
-    ("heap", po::value<std::string>(),
-     "heap image name (should be a valid path)");
+    ("heapimage", po::value<std::string>(),
+     "heap image name (should be a valid path)")
+    ("prefix", po::value<std::string>(&default_space)->default_value("words"),
+     "default space name for unqalified symbols");
   
   po::variables_map opts;
   po::store(po::command_line_parser(argc, argv).options(desc).positional(p).run(), opts);
@@ -141,35 +162,29 @@ int main(int argc, const char** argv) {
   if (opts.count("help")) {
     std::cout << desc <<  std::endl;
     return 1;
-  } else if (!opts.count("heap")) {
-    std::cout << "heap image is required!" << std::endl;
+  } else if (!opts.count("heapimage")) {
+    std::cout << "heap image file is required!" << std::endl;
     return 3;
   }
 
-  std::string heapfile(opts["heap"].as<std::string>());
+  std::string heapfile(opts["heapimage"].as<std::string>());
 
   
-  // create database with requirement
-  database rts(initial_size * 1024 * 1024, maximum_size * 1024 * 1024, heapfile); 
+  // create space manifold - database+
+ 
+  database rts(heapfile, initial_size * 1024 * 1024, maximum_size * 1024 * 1024); 
 
-  // XXX pro tem default space XXX FIX ME!!!
-  const std::string default_spacename("words");
-  
   // see if we can find space names
   std::vector<std::string> spaces = rts.get_named_spaces();
-  for (unsigned i = 0; i < spaces.size(); ++i) {
-    std::cout << i+1 << ":" << spaces[i];
-    // now actually get the pointers
-    auto spp = rts.get_space_by_name(spaces[i]);
-    std::cout << "@" << spp << "#" << spp->entries() << std::endl;
+  for (auto sn: spaces) {
+    auto card = rts.get_space_cardinality(sn);
+    std::cout << sn << " #" << card.second << std::endl;
   }
   
   // main command loop
 
-  // what should this interface be called really?
-  database::space::ephemeral_vector_t local_vector;
   
-  std::string prompt("Ψ> ");
+  std::string prompt("-> ");
   std::string input;
   
   std::cout << prompt;  
@@ -183,20 +198,46 @@ int main(int argc, const char** argv) {
     tokenize_command(input, cv);
 
     if (cv.size() > 1) {  
-      // assume we have a command
+      // assume we have a command and at least one argument
       
       // dispatch command
-      if (boost::iequals(cv[0], "=")) {
+      if (boost::iequals(cv[0], "|")) {
 
-        // 
-        status_t s = rts.ensure_symbol(default_spacename, cv[1]);
-
-        // now lookup the inserted symbol
-        if (auto sym = get_symbol(rts, default_spacename, cv[1]))
-          std::cout << "[" << s << "] " << sym->name() << std::endl;
-        else
-          std::cout << cv[1] << ": not found after insert (bug?)" << std::endl;
+        std::list<std::string> sym;
         
+        if (parse_symbol(cv[1], default_space, sym)) {
+          timer t;
+          auto r = rts.density(sym.front(), sym.back());
+          std::cout << t << r.second << " (" << r.first << ")" << std::endl;
+        }        
+
+        
+      } else if (boost::iequals(cv[0], "@")) {
+
+        std::list<std::string> sym;
+        
+        if (parse_symbol(cv[1], default_space, sym)) {
+          sdm_vector_t v;
+          timer t;
+          sdm_status_t s = rts.load_vector(sym.front(), sym.back(), v);
+          if (!sdm_error(s))
+            std::cout << t << sizeof(v) << "> " << std::hex << std::setw(16) << std::setfill('0') << v << std::endl;
+          else
+            std::cout << t << s << std::endl;
+        }        
+
+
+      } else if (boost::iequals(cv[0], "=")) {
+
+        std::list<std::string> sym;
+        
+        if (parse_symbol(cv[1], default_space, sym)) {
+          timer t;
+          sdm_status_t s = rts.namedvector(sym.front(), sym.back());
+          std::cout << t << sym.front() << ":" << sym.back() << " (" << s << ")" << std::endl;
+        }        
+
+
       } else if (boost::iequals(cv[0], "<")) {
         
         // load symbols from file
@@ -205,106 +246,150 @@ int main(int argc, const char** argv) {
         if (ins.good()) {
           std::string fline;
           int n = 0;
-          timer mytimer("load timer");
+          timer mytimer;
           
           while(std::getline(ins, fline)) {
             boost::trim(fline);
-            //std::cout << "addv(" << default_spacename << ":" << fline << ")" << std::endl;
-            rts.ensure_symbol(default_spacename, fline);
-            n++;
+            std::list<std::string> sym;
+            if (parse_symbol(fline, default_space, sym)) {
+              auto sts = rts.namedvector(default_space, fline);
+              if (sdm_error(sts)) {
+                std::cout << "stopped loading due to error: " << sts << std::endl;
+                break;
+              }
+              n++;
+            } else {
+
+            }
           }
+          
           std::cout << mytimer << " loaded: " << n << std::endl; 
+
         } else {
           std::cout << "can't open: " << cv[1] << std::endl;
         }
+
         
       } else if (boost::iequals(cv[0], ">")) {
-        ; // export file
+
+        // XX under development
+        auto r = rts.get_space_cardinality(cv[1]);
+        
+        if (!sdm_error(r.first)) {
+          database::geometry g;
+          g.reserve(r.second);
+          timer t;
+          sdm_status_t sts = rts.get_geometry(cv[1], g);
+          std::cout << t << "(" << sts << ")" << r.second << " dumping data..." << std::endl;
+          // TODO NEXT dump vectors to a file or matrix 
+          std::ofstream outf(cv[1] + ".dat");
+          if (outf.good()) {
+            for (database::point p : g) {
+              outf << p.name << "\t" << p.density << "\n";
+            }
+            outf.close();
+          }
+          
+        } else {
+          std::cout << "error: " << r.first << " for space: " << cv[1] << std::endl;
+        }
+
       
-      /* TODO convert these to use abstract api */
         
       } else if (boost::iequals(cv[0], "-")) {
-        // array access to space
-        boost::optional<database::space::vector&> v = get_vector(rts, default_spacename, cv[1]);
-        // xxx
-        if (v) {
-          database::space::ephemeral_vector_t myvector(*v);
-          
-          std::cout << v->count() << " " << myvector.distance(*v) << std::endl;
-        }
-      } else if (boost::iequals(cv[0], "+")) {
-        rts.superpose(default_spacename, cv[1], default_spacename, cv[2]);
-        boost::optional<database::space::vector&> v = get_vector(rts, default_spacename, cv[1]);
-        std::cout << v->count() << std::endl;
 
-      } else if (boost::iequals(cv[0], "/")) {
-        rts.superpose(default_spacename, cv[1], default_spacename, cv[2], true);
-        boost::optional<const database::space::symbol&> s = get_symbol(rts, default_spacename, cv[2]);
-        std::cout << s << std::endl;
+        std::list<std::string> sym1;
+        std::list<std::string> sym2;
+
+        if (parse_symbol(cv[1], default_space, sym1) &&
+            parse_symbol(cv[2], default_space, sym2)) {
+          timer t;
+          rts.subtract(sym1.front(), sym1.back(), sym2.front(), sym2.back());
+          std::cout << t << rts.density(sym1.front(), sym1.back()).second << std::endl;
+        }
+        
+      } else if (boost::iequals(cv[0], "^")) {
+
+        std::list<std::string> sym1;
+        std::list<std::string> sym2;
+
+        if (parse_symbol(cv[1], default_space, sym1) &&
+            parse_symbol(cv[2], default_space, sym2)) {
+        
+          timer t;
+          rts.superpose(sym1.front(), sym1.back(), sym2.front(), sym2.back());
+          std::cout << t << rts.density(sym1.front(), sym1.back()).second << std::endl;
+        }
+        
+      } else if (boost::iequals(cv[0], "+")) {
+
+        std::list<std::string> sym1;
+        std::list<std::string> sym2;
+
+        if (parse_symbol(cv[1], default_space, sym1) &&
+            parse_symbol(cv[2], default_space, sym2)) {
+        
+          timer t;
+          rts.superpose(sym1.front(), sym1.back(), sym2.front(), sym2.back(), true);
+          std::cout << t << rts.density(sym1.front(), sym1.back()).second << std::endl;
+        }
         
       } else if (boost::iequals(cv[0], "?")) {
-        //rts.superpose(default_spacename, cv[1], default_spacename, cv[2]);
-        boost::optional<database::space::vector&> v = get_vector(rts, default_spacename, cv[1]);
-        boost::optional<database::space::vector&> u = get_vector(rts, default_spacename, cv[2]);
-        // optional guards? tee hee
-        std::cout << v->similarity(*u) << std::endl;
+
+        std::list<std::string> sym1;
+        std::list<std::string> sym2;
+        
+        if (parse_symbol(cv[1], default_space, sym1) &&
+            parse_symbol(cv[2], default_space, sym2)) {
+
+          timer t;
+          std::cout << t << rts.similarity(sym1.front(), sym1.back(),
+                                           sym2.front(), sym2.back()).second
+                    << std::endl;
+        }
         
       } else if (boost::iequals(cv[0], ".")) {
-        //rts.superpose(default_spacename, cv[1], default_spacename, cv[2]);
-        boost::optional<database::space::vector&> v = get_vector(rts, default_spacename, cv[1]);
-        boost::optional<database::space::vector&> u = get_vector(rts, default_spacename, cv[2]);
-        // optional guards? tee hee
-        std::cout << v->inner(*u) << std::endl;
+          
+        std::list<std::string> sym1;
+        std::list<std::string> sym2;
         
-      } else if (boost::iequals(cv[0], "!")) {
-        // randomize the vector...
-        boost::optional<database::space::vector&> v = get_vector(rts, default_spacename, cv[1]);
-        rts.randomize_vector(v, 0.001);
-        std::cout << v->count() << std::endl;
-      
-      } else if (boost::iequals(cv[0], "%")) {
-        // topo
-        //boost::optional<database::space::vector&> v = get_vector(rts, default_spacename, cv[1]);
-        boost::optional<sdm::topology> t = rts.neighbourhood(default_spacename, default_spacename, cv[1], 0, 1, 20);
-        if (t) for (auto p : *t)
-          std::cout << p << std::endl;
+        if (parse_symbol(cv[1], default_space, sym1) &&
+            parse_symbol(cv[2], default_space, sym2)) {
 
-       
-      } else if (boost::iequals(cv[0], "1")) {
-        // randomize the vector...
-        boost::optional<database::space::vector&> v = get_vector(rts, default_spacename, cv[1]);
-        v->ones();
-        std::cout << v->count() << std::endl;
+          timer t;
+          double o = rts.overlap(sym1.front(), sym1.back(), sym2.front(), sym2.back()).second;
+          std::cout << t << o << std::endl;
+        }
 
-      } else if (boost::iequals(cv[0], "0")) {
-        // randomize the vector...
-        boost::optional<database::space::vector&> v = get_vector(rts, default_spacename, cv[1]);
-        v->zeros();
-        std::cout << v->count() << std::endl;
+        // TODO toppology lookup and render...
 
-
-
-      } else
-        std::cout << "syntax error:" << input << std::endl;
+        
+      } else std::cout << "! syntax error:" << input << std::endl;
 
       
     } else if (cv.size() > 0) {
       // default to search if no args
-      auto ip = rts.prefix_search(default_spacename, cv[0]);
-      if (ip) std::copy((*ip).first, (*ip).second, std::ostream_iterator<database::space::symbol>(std::cout, "\n"));
-      else std::cout << "not found" << std::endl;
+      std::list<std::string> sym;
+
+      if (parse_symbol(cv[0], default_space, sym)) {
+          timer t;
+          auto ip = rts.prefix_search(sym.front(), sym.back());
+          
+          std::cout << t << std::endl;
+          if (!sdm_error(ip.first))
+            std::copy(ip.second.first, ip.second.second,
+                      std::ostream_iterator<database::space::symbol_t>(std::cout, "\n"));
+          else std::cout << sym.front() << ":" << sym.back() << " not found" << std::endl;
+        }
     }
     
     std::cout << prompt;  
   }
   
-  // goodbye from me and goodbye from him...
-  std::cout << std::endl
-            << (rts.check_heap_sanity() ? ":-)" : ":-(")
-            << " heap size: " << (float) rts.heap_size() / (1024*1024)
-            << " free: " << (float) rts.free_heap() / (1024*1024)
-            << std::endl << "...bye" << std::endl;
-  
+  std::cout << heapfile << ": " << (rts.check_heap_sanity() ? "✔" : "✘")
+            << " heap size: "   << B2MB(rts.heap_size())
+            << " free: "        << B2MB(rts.free_heap()) << std::endl;
+
   return 0;
   
 }

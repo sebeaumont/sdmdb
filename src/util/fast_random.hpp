@@ -14,13 +14,14 @@
 #include <boost/random/uniform_int_distribution.hpp>
 
 
-namespace molemind { namespace sdm {
+namespace sdm {
 
   namespace random {
 
-    // this is current PRNG
-    // UC conform to boost::
+    /* custom PRNG TODO XXX conform to boost intefaces for RNG so we
+       can use in index randomizer implementation */
     
+    /// xorshifter
     struct xorshifter : private boost::noncopyable {
     
     private:
@@ -52,8 +53,8 @@ namespace molemind { namespace sdm {
       
       // state must be seeded with a non-zero value
       explicit xorshifter(uint64_t seed) : x(seed) {
-        // use xorshift64star to seed 16 64bits of state for
-        // xosrshift1024start
+        // TODO use xorshift64star to seed 16 64bits of state for
+        // xosrshift1024star
       }
 
       inline uint64_t rand(void) {
@@ -70,8 +71,9 @@ namespace molemind { namespace sdm {
     };
 
 
-    // todo put our rng in here
-      
+    /* TODO put above rng in here -- currently using mt19937 which I don't 
+       believe is fast or good enough for production XXX */
+    
     struct uniform_random : std::unary_function<unsigned, unsigned> {
      
       boost::random::mt19937& _rng;
@@ -86,7 +88,7 @@ namespace molemind { namespace sdm {
     };
 
 
-    // shuffle based vector randomization tools
+    /// shuffle based vector randomization tools
    
     class index_randomizer {
       
@@ -96,12 +98,12 @@ namespace molemind { namespace sdm {
       uniform_random _generator;
       //random_cmrrsr _cmrrsr; //= random_cmrrsr(428394849);
       //my_adapter _generator; //= my_adapter(_cmrrsr);
-      std::vector<size_t> _idx; // why not size_t?
+      std::vector<unsigned> _idx; 
 
     public:
      
-      index_randomizer(std::size_t n) : _state(boost::random::mt19937()),
-                                        _generator(uniform_random(_state)) {
+      index_randomizer(unsigned n) : _state(boost::random::mt19937()),
+                                     _generator(uniform_random(_state)) {
         _idx.reserve(n);
         // initialize list of indexes one time
         for (std::size_t i = 0; i < n; ++i)
@@ -111,7 +113,7 @@ namespace molemind { namespace sdm {
       
       // generate a shuffled vector of indexes could fix/template length of this
       
-      inline std::vector<std::size_t>& shuffle(void) {
+      inline std::vector<unsigned>& shuffle(void) {
         std::random_shuffle(_idx.begin(), _idx.end(), _generator);
         return _idx;
       }
@@ -119,4 +121,4 @@ namespace molemind { namespace sdm {
     };
     
   }
-  }}
+}

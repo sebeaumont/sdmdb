@@ -1,184 +1,107 @@
-// Copyright (c) 2017 Simon Beaumont - All Rights Reserved.
-
 #pragma once
-
-#define VELEMENT_64 1
-
-#ifdef VELEMENT_64
-#define ONE 1ULL
-#else
-#define ONE 1U
-#endif
-#define CHAR_BITS (8)
+#include "sdmconfig.h"
+#include "bitvector.hpp"
 
 
-namespace molemind {
-  
-  namespace sdm {
+namespace sdm {
+  namespace mms {
 
-    namespace mms {
+    ///
+    /// ephemeral_vector can wrap another vector and overload binary ops
+    ///
+    template <typename element_t,
+              unsigned n_elements,
+              typename W,
+              class base_t=std::vector<element_t>>
 
-      // operations of vectors of mixed types 
+    
+    struct ephemeral_vector :public base_t {
+
+      static constexpr std::size_t dimensions =  n_elements * sizeof(element_t) * CHAR_BITS;
       
-      template <typename T, std::size_t L, typename I>
-      struct ephemeral_vector {
-        
-        ephemeral_vector() {
-        }
+      /// constructors
+      ephemeral_vector() : base_t() {
+        this->reserve(n_elements);
+      }
 
-        ephemeral_vector(const T* v) {
-          // XXX input not bounds checked
-          #pragma unroll
-          #pragma clang loop vectorize(enable) interleave(enable)
-          for (std::size_t i=0; i < L; ++i, ++v) {
-            _elem[i] = *v;
-          }
-        }
-  
-        
-        ephemeral_vector(const I& v) {
-          for (std::size_t i = 0; i < L; ++i) {
-            _elem[i] = v[i];
-          }
-        }
+      /// construct from API input type 
+      explicit ephemeral_vector(const sdm_vector_t& other) : base_t() {
+        this->reserve(n_elements);
+        #pragma unroll
+        for (unsigned i=0; i < n_elements; ++i)
+          this->push_back(other[i]);
+      }
 
-        T operator[](const std::size_t i) {
-          return _elem[i];
-        }
-        
-        /// SDM dimensions i.e. bits
-        static constexpr std::size_t dimensions =  L * sizeof(T) * CHAR_BITS;
-        
+      /////////////////////////////////////////////
+      /// binary operations on wrapped vector type
+      /////////////////////////////////////////////
 
-        /// SDM vector properties
-        
-        inline const std::size_t count() {
-          std::size_t count = 0;
-          for (std::size_t i=0; i < L; ++i) {
-            #if VELEMENT_64
-            count += __builtin_popcountll(_elem[i]);
-            #else
-            count += __builtin_popcount((_elem[i]);
-            #endif
-          }
-          return count;
+      /// semantic distance is the Hamming distance
+      
+      inline const std::size_t distance(const W& v) const {
+        std::size_t distance = 0;
+        #pragma unroll
+        #pragma clang loop vectorize(enable) interleave(enable)
+        for (unsigned i=0; i < n_elements; ++i) {
+          element_t r = (*this)[i] ^ v[i];
+          #ifdef VELEMENT_64
+          distance += __builtin_popcountll(r);
+          #else
+          distance += __builtin_popcount(r);
+          #endif
         }
-        
-        
-        inline double density() {
-          return (double) count() / dimensions;
+        return distance;
+      }
+    
+      /// inner product is the commonality/overlap
+      
+      inline const std::size_t inner(const W& v) const {
+        std::size_t count = 0;
+        #pragma unroll
+        #pragma clang loop vectorize(enable) interleave(enable)
+        for (unsigned i=0; i < n_elements; ++i) {
+          element_t r = (*this)[i] & v[i];
+          #ifdef VELEMENT_64
+          count += __builtin_popcountll(r);
+          #else
+          count += __builtin_popcount(r);
+          #endif
         }
-        
-        
-        // vector measurement functions
-        
-        inline const std::size_t distance(ephemeral_vector& v) {
-          std::size_t distance = 0;
-          #pragma unroll
-          #pragma clang loop vectorize(enable) interleave(enable)
-          for (std::size_t i=0; i < L; ++i) {
-            T r = _elem[i] ^ v._elem[i];
-            #ifdef VELEMENT_64
-            distance += __builtin_popcountll(r);
-            #else
-            distance += __builtin_popcount(r);
-            #endif
-          }
-          return distance;
+        return count;
+      }
+      
+      /// semantic union
+      
+      inline const std::size_t countsum(const W& v) const {
+        std::size_t count = 0;
+        #pragma unroll
+        #pragma clang loop vectorize(enable) interleave(enable)
+        for (unsigned i=0; i < n_elements; ++i) {
+          element_t r = (*this)[i] | v[i];
+          #ifdef VELEMENT_64
+          count += __builtin_popcountll(r);
+          #else
+          count += __builtin_popcount(r);
+          #endif
         }
-
-        
-        inline const std::size_t distance(const I& v) const {
-          std::size_t distance = 0;
-          #pragma unroll
-          #pragma clang loop vectorize(enable) interleave(enable)
-          for (std::size_t i=0; i < L; ++i) {
-            T r = _elem[i] ^ v[i];
-            #ifdef VELEMENT_64
-            distance += __builtin_popcountll(r);
-            #else
-            distance += __builtin_popcount(r);
-            #endif
-          }
-          return distance;
-        }
-        
-        
-        inline const std::size_t inner(ephemeral_vector& v) {
-          std::size_t count = 0;
-          #pragma unroll
-          #pragma clang loop vectorize(enable) interleave(enable)
-          for (std::size_t i=0; i < L; ++i) {
-            T r = _elem[i] & v._elem[i];
-            #ifdef VELEMENT_64
-            count += __builtin_popcountll(r);
-            #else
-            count += __builtin_popcount(r);
-            #endif
-          }
-          return count;
-        }
-
-                
-        inline const std::size_t inner(const I& v) const {
-          std::size_t count = 0;
-          #pragma unroll
-          #pragma clang loop vectorize(enable) interleave(enable)
-          for (std::size_t i=0; i < L; ++i) {
-            T r = _elem[i] & v[i];
-            #ifdef VELEMENT_64
-            count += __builtin_popcountll(r);
-            #else
-            count += __builtin_popcount(r);
-            #endif
-          }
-          return count;
-        }
-
-        
-        inline std::size_t countsum(ephemeral_vector& v) {
-          std::size_t count = 0;
-          #pragma unroll
-          #pragma clang loop vectorize(enable) interleave(enable)
-          for (std::size_t i=0; i < L; ++i) {
-            T r = _elem[i] | v._elem[i];
-            #ifdef VELEMENT_64
-            count += __builtin_popcountll(r);
-            #else
-            count += __builtin_popcount(r);
-            #endif
-          }
-          return count;
-        }
-        
-                                        
-        /// Similarity of vectors
-        inline double similarity(ephemeral_vector& v) {
-          // inverse of the normalized distance
-          return 1.0 - (double) distance(v)/dimensions;
-        }
-                                        
-        /// Similarity of vectors
-        inline double similarity(const I& v) const {
-          // inverse of the normalized distance
-          return 1.0 - (double) distance(v)/dimensions;
-        }
-
-        /// Overlap of vectors
-        inline double overlap(ephemeral_vector& v) {
-          return (double) inner(v)/dimensions;
-        }
-                                        
-        /// Overlap of vectors
-        inline double overlap(const I& v) const {
-          return (double) inner(v)/dimensions;
-        }
-
-                                        
-
-      private:
-        T _elem[L];
-      };
-    }
+        return count;
+      }
+    
+      /// semantic similarity
+      
+      inline const double similarity(W& v) const {
+        // inverse of the normalized distance
+        return 1.0 - (double) distance(v)/dimensions;
+      }
+    
+    
+      /// semantic overlap
+      
+      inline const double overlap(const W& v) const {
+        // ratio of common bits to max common
+        return (double) inner(v)/dimensions;
+      }
+    
+    };
   }
 }

@@ -56,15 +56,35 @@ private:
 };
 
 
-// tokenzier for tsv input line
-boost::char_separator<char> sep("\t");
+////////////////////////////
+// tokenzier for input line
+//
 
-void tokenize_line(const string& s, vector<string>& o) {
+void tokenize_line_text(const string& s, vector<string>& o) {
 
-  boost::tokenizer<boost::char_separator<char>> tokens(s, sep);
+  typedef boost::tokenizer<boost::char_separator<char>> tokenizer;
+  boost::char_separator<char> sep(" \n\t");
+  tokenizer tokens(s, sep);
 
   for(auto j = tokens.begin(); j != tokens.end(); ++j) {
     string t(*j);
+    // clean up
+    boost::trim_left_if(t, boost::is_any_of(" .-:<"));
+    boost::trim_right_if(t, boost::is_any_of(" .-:>?!,;")); 
+    o.push_back(t);
+  }
+}
+
+
+void tokenize_line(const string& s, vector<string>& o) {
+
+  typedef boost::tokenizer<boost::char_separator<char>> tokenizer;
+  boost::char_separator<char> sep("\t");
+  tokenizer tokens(s, sep);
+
+  for(auto j = tokens.begin(); j != tokens.end(); ++j) {
+    string t(*j);
+    // clean up any whitespace
     boost::trim(t);
     o.push_back(t);
   }
@@ -80,27 +100,32 @@ int main(int argc, const char** argv) {
   
   
   namespace po = boost::program_options;
-  using namespace molemind::sdm;
+  using namespace sdm;
   
   // announce
-  string banner = "SDM frametrainer - Copyright (c) 2012-2018 Simon Beaumont - All Rights Reserved.\nSee: LICENCE for terms and conditions.";
+  string banner = "SDM frametrainer with SDMLIB 10";
 
   //////////////////////////////
   // global training parameters
 
   // command line options
-  bool symmetric = false; // TODO -- what was the intension here?
-  
+  bool symmetric = false; // aRb => bRa
   // create a reverse index of frames?
   bool reverse_index = false;
   // co train terms in termspace?
   bool cotrain = false;
   // train with differentiated term instances
   bool diffterms = false;
-  
+  // reference count source symbols in superposition
+  bool refcount = false;
+  // lines start with frame ids to group frames else assume 1 line/frame
+  bool frameids = false;
+
+  // default space names
   string framespace;
   string termspace;
   
+  // and database size
   size_t initial_size;
   size_t maximum_size;
   
@@ -110,10 +135,16 @@ int main(int argc, const char** argv) {
   
   desc.add_options()
     ("help", "SDM frametrainer -- read (tsv) frames from stdin")
+    ("frameids", po::bool_switch(&frameids),
+     "data lines start with frame ids for grouping")
     ("multisense", po::bool_switch(&diffterms),
      "train with differentiated instances of terms")
+    ("refcount", po::bool_switch(&refcount),
+     "reference count source terms in training")
     ("cotrain", po::bool_switch(&cotrain),
      "co-train terms in termspace")
+    ("symmetric", po::bool_switch(&symmetric),
+     "aRb => bRA")
     ("termspace", po::value<string>(),
      "name of space for terms")
     ("framespace", po::value<string>(),
@@ -162,7 +193,7 @@ int main(int argc, const char** argv) {
 
   // warn user maybe they just want to parse the input...
   if (!reverse_index && !cotrain) {
-    cout << "Warning: not co-training terms and no framespace given so no training will take place!" << endl;
+    cout << "Warning: not co-training terms and no framespace given so no training effects!" << endl;
   }
   cout << "============================================="         << endl;
   cout << banner                                                  << endl;
@@ -172,28 +203,37 @@ int main(int argc, const char** argv) {
   cout << "maxsize:    " << maximum_size                          << endl;
   cout << "termspace:  " << termspace                             << endl;
   cout << "framespace: " << (reverse_index ? framespace : "None") << endl;
+  cout << "symmetric:  " << symmetric                             << endl;
   cout << "cotrain:    " << cotrain                               << endl;
   cout << "multisense: " << diffterms                             << endl;
+  cout << "refcount:   " << refcount                              << endl;
   cout << "============================================="         << endl;
 
   // create database with requirement
-  database db(initial_size * 1024 * 1024, maximum_size * 1024 * 1024, heapfile);
+  database db(heapfile, initial_size * 1024 * 1024, maximum_size * 1024 * 1024);
   
   // print out all the existing spaces and cardinalities
   vector<string> spaces = db.get_named_spaces();
   
   if (spaces.size() > 0) {
     cout << "existing spaces in image:" << endl;
-  
-    for (unsigned i = 0; i < spaces.size(); ++i) {
-      cout << "\t" << spaces[i];
-      // now actually get the pointers and cards
-      auto spp = db.get_space_by_name(spaces[i]);
-      cout << "[" << spp->entries() << "]" << endl;
+    // see if we can find space names
+    auto spaces = db.get_named_spaces();
+    //std::vector<std::string> spaces = db.get_named_spaces();
+    
+    for (auto sn: spaces) {
+      auto ret = db.get_space_cardinality(sn);
+      std::cout << sn << " #" << ret.second << std::endl;
     }
   }
+
+  // start of terms in tokenized line
+  u_int start = frameids ? 1 : 0;
   
-  cout << "reading data frames from stdin..." << endl;
+  cout << "reading data frames from stdin "
+       << (frameids ?  "lines have frame ids" : "one frame per line") << endl;
+  cout << "---------------------------------------------"         << endl;
+
   // accumualated stats...
   u_int frames = 0;
 
@@ -208,19 +248,26 @@ int main(int argc, const char** argv) {
   // simple cline processor
   while (getline(cin, input)) {
     rows++;
+
+    if ((rows % 1000) == 0) cout << "." << std::flush;
     
     boost::trim(input);
     vector<string> tv;
   
     tokenize_line(input, tv);
 
-    // must at least have a frame id and a term
-    if (tv.size() > 1) {
-      
-      // change of frame 
-      if (frameid != tv[0]) {
-        frameid = tv[0];
-        frames++;
+    // must at least have a frame id or a term
+    if (tv.size() > 0) {
+
+      if (frameids) {
+        // detect change of frame 
+        if (frameid != tv[0]) {
+          frameid = tv[0];
+          ++frames;
+        }
+        
+      } else {
+        ++frames;
       }
       
       // we need to permute the pairs treating this as a partial order
@@ -229,8 +276,9 @@ int main(int argc, const char** argv) {
       // un-ordered set of terms in frame
       // xxx should this be a set now in light of multisense capability?
       //     e.g. repeated terms in given frame may have different senses!
-      //set<string> termset(tv.begin()+1, tv.end());
-      list<string> termset(tv.begin()+1, tv.end());
+      //set<string> termset(tv.begin()+start, tv.end());
+      
+      list<string> termset(tv.begin()+start, tv.end());
 
       // assert reverse index if required
       if (reverse_index) for (string term: termset) {
@@ -240,11 +288,12 @@ int main(int argc, const char** argv) {
       // cotrain terms in termspace
       if (cotrain) {
         // co-train pairwise combinatations of terms
+        // XXX the triangular optimization only makes sense if relation is symmetric. XXX
         for (auto first = termset.begin(); first != termset.end(); ++first) {
           for (auto next = std::next(first); next != termset.end(); ++next) {
             // assert: first R next
             db.superpose(termspace, *first, termspace, *next, diffterms);
-            // if aRb => bRa then reify, latch current sense
+            // if aRb => bRa then reify next R first
             if (symmetric) db.superpose(termspace, *next, termspace, *first);
           }
         }
@@ -254,10 +303,20 @@ int main(int argc, const char** argv) {
   }
  
   // goodbye from me and goodbye from him...
-  cout << "at end of input rows: " << rows << " frames: " << frames << " empty frames: " << empty << endl;
-  if (cotrain) cout << termspace << " #" << db.get_space_cardinality(termspace) << endl;
-  if (reverse_index) cout << framespace << " #" << db.get_space_cardinality(framespace) << endl;
-  cout << (db.check_heap_sanity() ? ":-)" : ":-(") << " free: " << B2MB(db.free_heap()) << endl;
+  cout << "at end of input rows: " << rows
+       << " frames: " << frames
+       << " empty frames: " << empty << endl;
+  
+  if (cotrain) cout << termspace
+                    << " #"
+                    << db.get_space_cardinality(termspace).second << endl;
+
+  if (reverse_index) cout << framespace
+                          << " #"
+                          << db.get_space_cardinality(framespace).second << endl;
+  
+  cout << heapfile << ": " << (db.check_heap_sanity() ? "✔" : "✘")
+       << " free: " << B2MB(db.free_heap()) << endl;
   
   return 0;
 }

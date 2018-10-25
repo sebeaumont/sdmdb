@@ -1,32 +1,72 @@
 // implementation of sdmlib c interface library
 #include <errno.h>
-#include <cereal/archives/json.hpp>
-#include <cereal/types/vector.hpp>
+//#include <cereal/archives/json.hpp>
+//#include <cereal/types/vector.hpp>
 #include <sstream>
 
 #include "sdmlib.h"
 #include "database.hpp"
 
-using namespace molemind::sdm;
+using namespace sdm;
 
 /* the c rtl implementation */
+
+const sdm_status_t
+sdm_database(const sdm_name_t filename,
+             const size_t size,
+             const size_t maxsize,
+             database_t* db) {
+  try {
+
+    *db = new database(std::string(filename), size, maxsize);
+    return AOK;
+
+    // TODO refine this catch all and return better status
+  } catch (const std::exception& e) {
+
+    fprintf(stderr,
+            "SDMLIB: %s (sdm_database %s %lu %lu)\n",
+            e.what(), filename, size, maxsize);
+    return ERUNTIME;
+  }
+}
+
+const sdm_status_t
+sdm_database_close(const database_t db) {
+  delete static_cast<database*>(db);
+  return AOK;
+}
+
+
+
+const sdm_status_t
+sdm_load_vector(const database_t db,
+                const sdm_name_t space_name,
+                const sdm_name_t symbol_name,
+                sdm_vector_t vector) {
+
+  return static_cast<database*>(db)->load_vector(std::string(space_name),
+                                                 std::string(symbol_name),
+                                                 vector);
+}
+
+#ifdef NOTDEF
 
 const status_t sdm_database(const char* filename,
                             size_t size,
                             size_t maxsize,
                             database_t* db) {
   try {
-    *db = new database(size, maxsize, std::string(filename));
+    *db = new database::database(size, maxsize, std::string(filename));
     return AOK;
   } catch (const std::exception& e) {
-    fprintf(stderr, "SDMLIB: %s (sdm_database %s %lu %lu)\n",
-            e.what(), filename, size, maxsize);
+    fprintf(stderr, "RUNTIME EXCEPTION: %s\n", e.what());
     return ERUNTIME;
   }
 }
 
 const status_t sdm_database_close(const database_t db) {
-  delete static_cast<database*>(db);
+  delete static_cast<database::database*>(db);
   return AOK;
 }
 
@@ -34,7 +74,7 @@ const status_t sdm_database_get_space(const database_t db,
                                       const char* spacename,
                                       space_t* space) {
   database::space* sp =
-    static_cast<database*>(db)->get_space_by_name(std::string(spacename));
+    static_cast<database::database*>(db)->get_space_by_name(std::string(spacename));
   if (sp == nullptr) return ESPACE;
   *space = sp;
   return AOK;
@@ -44,7 +84,7 @@ const status_t sdm_database_ensure_space(const database_t db,
                                          const char* spacename,
                                          space_t* space) {
   try {
-    database::space* sp = static_cast<database*>(db)->
+    database::space* sp = static_cast<database::database*>(db)->
       ensure_space_by_name(std::string(spacename));
     if (sp == nullptr) return ERUNTIME; //?
     *space = sp;
@@ -57,26 +97,11 @@ const status_t sdm_database_ensure_space(const database_t db,
 }
 
 
-const status_t sdm_database_superpose(const database_t db,
-                                      const char* target_spacename,
-                                      const char* target_symbolname,
-                                      const char* source_spacename,
-                                      const char* source_symbolname,
-                                      const int newbasis) {
-  // delegate to db method
-  return static_cast<database*>(db)->superpose(target_spacename,
-                                               target_symbolname,
-                                               source_spacename,
-                                               source_symbolname,
-                                               (bool) newbasis);
-}
-
-
 const status_t sdm_database_ensure_space_symbol(const database_t db,
                                                 const char* spacename,
                                                 const char* symbolname,
                                                 symbol_t* sym) {
-  auto dp = static_cast<database*>(db);
+  auto dp = static_cast<database::database*>(db);
     // may create a space
   auto space = dp->ensure_space_by_name(spacename);
   if (!space) return ERUNTIME;
@@ -119,7 +144,7 @@ const status_t sdm_database_ensure_symbol(const database_t db,
                                           const char* symbolname,
                                           symbol_t* sym) {
 
-  auto dp = static_cast<database*>(db);
+  auto dp = static_cast<database::database*>(db);
   auto sp = static_cast<database::database::space*>(space);
     
 
@@ -262,7 +287,6 @@ const card_t sdm_space_get_topology(const space_t s,
   database::space::ephemeral_vector_t vec(v);
   card_t k = 0;
 
-  // using the new topology metric
   auto topo = sp->neighbourhood(vec, metric_lb, density_ub, card_ub);
   // TODO speedup by passing t directly to neighbourhood fn?
   
@@ -270,34 +294,7 @@ const card_t sdm_space_get_topology(const space_t s,
     ++k;
     // XXX might be stable ptr as the symbol (*i) is probably stable and c_str() is a pointer not a copy
     t->symbol = i->name.c_str(); 
-    t->metric = i->similarity; // this overlap
-    t->density = i->density;
-  }
-  return k; // XXX should be the actual level set cardinality (given contraints) 
-}
-
-
-const card_t sdm_space_get_topology2(const space_t s,
-                                     const vectordata_t* v,
-                                     const double metric_lb,
-                                     const double density_ub,
-                                     const card_t card_ub,
-                                     point_t* t) {
-  // space 
-  auto sp = static_cast<database::space*>(s);
-  // load query vector
-  database::space::ephemeral_vector_t vec(v);
-  card_t k = 0;
-
-  // using the new topology metric
-  auto topo = sp->neighbourhood2(vec, metric_lb, density_ub, card_ub);
-  // TODO speedup by passing t directly to neighbourhood fn?
-  
-  for (auto i = topo.begin(); i != topo.end(); ++i, ++t) {
-    ++k;
-    // XXX might be stable ptr as the symbol (*i) is probably stable and c_str() is a pointer not a copy
-    t->symbol = i->name.c_str(); 
-    t->metric = i->similarity; // this overlap
+    t->metric = i->similarity;
     t->density = i->density;
   }
   return k; // XXX should be the actual level set cardinality (given contraints) 
@@ -326,4 +323,4 @@ const status_t sdm_vector_store(const vector_t v,
                                 vectordata_t vdata) {
   return EUNIMPLEMENTED;
 }
-
+#endif // NOTDEF

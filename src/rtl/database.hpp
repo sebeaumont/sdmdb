@@ -6,45 +6,36 @@
 #include <boost/optional.hpp>
 #include <map>
 
+#include "sdmconfig.h"
+#include "sdmtypes.h"
+
+#include "manifold.hpp"
 #include "../mms/symbol_space.hpp"
 #include "../util/fast_random.hpp"
 
-#include "topology.hpp"
-#include "sdmconfig.h"
-#include "sdmstatus.h"
 
 #include <iostream>
 
-namespace molemind { namespace sdm {
+namespace sdm {
 
   namespace bip = boost::interprocess;
-  using namespace molemind;
-  
+
   /***********************************************************************
    ** Database type provides the API for the SDM implementation
    ***********************************************************************/
   
-  class database {
+  class database : public manifold {
 
     /// memory manager for spaces within the database
-    typedef bip::managed_mapped_file segment_t;
     
   public:
 
-    /////////////////////////////////
-    /// mms symbol_space definition
-    /////////////////////////////////
-
-    /// type of space implementation determines the type and number of elements and sparsity
+    /// constructor to open or create file mapped heap r/w
     
-    typedef mms::symbol_space<SDM_VECTOR_ELEMENT_TYPE, SDM_VECTOR_ELEMS, SDM_VECTOR_BASIS_SIZE, segment_t> space;
-    
-    
-    /// constructor to initialize file mapped heap
-    
-    explicit database(const std::size_t initial_size,
+    explicit database(const std::string& filepath,
+                      const std::size_t initial_size,
                       const std::size_t max_size,
-                      const std::string& filepath);
+                      const bool compact=false);
 
     
     /// no copy or move semantics
@@ -58,84 +49,79 @@ namespace molemind { namespace sdm {
     /// destructor will cautiously ensure all pages are flushed
     
     ~database();
-
-    /// create new symbol
     
-    status_t ensure_symbol(const std::string& space_name, const std::string& symbol_name) noexcept;
-
-    /// search for symbols starting with prefix
-    typedef std::pair<database::space::symbol_iterator, database::space::symbol_iterator> symbol_list;
-    
-    boost::optional<symbol_list> prefix_search(const std::string& space_name,
-                                               const std::string& symbol_prefix) noexcept;
-    
-    
-    /////////////////////////
-    /// vector properties ///
-    /////////////////////////
-    
-    /// get vector density
-    boost::optional<const double> density(const std::string& space_name, const std::string& vector_name) noexcept;
-
 
     /////////////////////////////////////////////////////
     /// effectful learning operations on target vectors
     /////////////////////////////////////////////////////
+
+    
+    /// assert a named vector
+        
+    const sdm_status_t
+    namedvector(const std::string& space_name,
+                const std::string& symbol_name,
+                const sdm_prob_t type = 1.0) noexcept;
+
     
     /// add or superpose
-    status_t superpose(const std::string& ts, const std::string& tn,
-                       const std::string& ss, const std::string& sn,
-                       const bool newbasis = false);
-  
+    
+    const sdm_status_t
+    superpose(const std::string& ts, const std::string& tn,
+              const std::string& ss, const std::string& sn,
+              const int shift = 0) noexcept;
+
+    /// batch superpose several symbols from source space
+    /*
+    const sdm_status_t
+    superpose(const std::string& ts, const std::string& tn,
+              const std::string& ss, const std::vector<std::string&> sns,
+              const std::vector<int> shifts,
+              const bool refcount = false) noexcept;
+    */
     /// subtract
-    status_t subtract(const std::string& ts, const std::string& tn,
-                      const std::string& ss, const std::string& sn) noexcept;
-    
-    /// multiply
-    status_t multiply(const std::string& ts, const std::string& tn,
-                      const std::string& ss, const std::string& sn) noexcept;
-    
-    /// TODO exponents
-    
-    /// TODO shifts and other permutations of bases
-    
-    
-    ////////////////////////
-    /// vector measurement
-    ////////////////////////
-    
-    /// simlilarity (unit distance)
-    boost::optional<double> similarity(const std::string&, const std::string&,
-                                       const std::string&, const std::string&) noexcept;
 
-    /// inner product
-    boost::optional<double> inner(const std::string&, const std::string&,
-                                  const std::string&, const std::string&) noexcept;
-
+    const sdm_status_t
+    subtract(const std::string& ts, const std::string& tn,
+             const std::string& ss, const std::string& sn) noexcept;
     
-    /// toplogy of n nearest neighbours satisfying p, d constraints
-    boost::optional<topology> neighbourhood(const std::string& target_space,
-                                            const std::string& source_space,
-                                            const std::string& source_name,
-                                            double similarity_lower_bound,
-                                            double density_upper_bound,
-                                            std::size_t cardinality_upper_bound) noexcept;
-    /// TODO negation
-    
-    /// TODO query algebra
     
     
     ////////////////////////
     /// space operations ///
     ////////////////////////
     
-    bool destroy_space(const std::string&) noexcept;
+    bool
+    destroy_space(const std::string&) noexcept;
 
-    std::vector<std::string> get_named_spaces() noexcept;
+    ///////////////////
+    /// heap metrics //
+    ///////////////////
     
-    boost::optional<std::size_t> get_space_cardinality(const std::string&) noexcept;
-   
-  
+    inline std::size_t heap_size() noexcept { return heap.get_size(); }
+    inline std::size_t free_heap() noexcept { return heap.get_free_memory(); }
+    inline bool check_heap_sanity() noexcept { return heap.check_sanity(); }
+    inline bool can_grow_heap() noexcept { return (heap.get_size() < maxheap); }
+
+
+    ////////////////////////////////////////////
+    /// internal functions typically inlined ///
+    ////////////////////////////////////////////
+    
+  private:
+
+    inline std::pair<sdm_status_t, space::symbol_t&>
+    ensure_mutable_symbol(const std::string& space,
+                          const std::string& name,
+                          const sdm_prob_t dither = 1.0);
+
+    inline std::pair<sdm_status_t, const space::symbol_t*>
+    ensure_symbol(const std::string&,
+                  const std::string&,
+                  const sdm_prob_t dither = 1.0);
+
+  private:
+    
     //////////////////////
     /// heap utilities ///
     //////////////////////
@@ -144,40 +130,7 @@ namespace molemind { namespace sdm {
     
     bool compactify_heap() noexcept;
     
-    /// heap metrics
-    
-    inline std::size_t heap_size() noexcept { return heap.get_size(); }
-    inline std::size_t free_heap() noexcept { return heap.get_free_memory(); }
-    inline bool check_heap_sanity() noexcept { return heap.check_sanity(); }
-    inline bool can_grow_heap() noexcept { return (heap.get_size() < maxheap); }
-    
-    
-    /// get named symbol
-    boost::optional<const space::symbol&> get_symbol(const std::string& space_name, const std::string& symbol_name) noexcept;
-
-    /// get named vector
-    boost::optional<space::vector&> get_vector(const std::string& space_name, const std::string& vector_name) noexcept;
-
-    /// TODO add a list of vectors
-
-    /* not sure we should provide these */
-    /// randomise a vector 
-    
-    void randomize_vector(boost::optional<space::vector&> vector, double p) noexcept;
-
-    /// ones
-    void unit_vector(boost::optional<space::vector&> v) noexcept;
-    
-    /// zeros
-    void zero_vector(boost::optional<space::vector&> v) noexcept;
-
-    // get space
-    space* get_space_by_name(const std::string&); 
-
-    /// database memoizes pointers to named spaces to optimize symbol resolution 
-    space* ensure_space_by_name(const std::string&); 
-    
-    // get randomizer for fun and profit...
+    /// get randomizer
     inline random::index_randomizer& randomidx(void) { return irand; }
 
     
@@ -187,15 +140,15 @@ namespace molemind { namespace sdm {
     // lifetime state //
     ////////////////////
 
-    // constructed
-    std::size_t inisize;
+    // db parameters
     std::size_t maxheap;
-    segment_t heap;
-    const std::string heapimage;
-    // read through cache
-    std::map<const std::string, space*> spaces; // used space cache
-    // randomizer
+    const bool compclose;
+    
+    // randomizer init at construction
     random::index_randomizer irand;
+
+    // are we trying to grow?
+    volatile bool isexpanding;
  
   };
-  }}
+}
