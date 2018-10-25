@@ -3,12 +3,6 @@ SDMLIB - Sparse Distributed Memory Database
 
 Unreleased Apha version -- Planned Public Release Milestone December 2018
 
-I am currently refactoring the architecture of the API and library
-into two parts, the database and the query engine. This is to allow a
-more compact and flexible training/learning implementation and to use
-GPU or dedicated hardware implmentation for the metric space/topology
-or search egnine.
-
 The main artefact of the project is the sdm runtime library which
 offers a high performance sparse distributed memory or semantic vector
 database targeted at a number of platforms.
@@ -24,12 +18,10 @@ hyper-dimensional sparse space. This model has been extensively
 applied to and indeed was incubated in the domain of data/text
 mining particularly word level embeddings.
 
-There is a c library under active development currently driven
-by the need for a foreign function interface for client languages.
-This currently supercedes the c++ library classes and may end up as
-the only API. Tho' is seems a shame to miss out on integrations using
-say boost python or other clever and efficient FFI bindings.
-
+The architecture of this library is a bit of a moving target but I am
+settling on providing a minimal core library as a header only
+implementation and small c/c++ modules to facilitate integration into
+various foreign language environments. Watch this space. 
 
 
 Building 
@@ -54,16 +46,9 @@ Requires doxygen
 
 ```shell
 doxygen
-```
-
-The c library is a very cut down shim of the full capability of the
-C++ implementation and serves the ad-hoc needs of the FFI indeed this
-may likely be the minimal specification that is required and all the
-other methods in the C++ API may be elided in due course. Indeed we
-may decline to even build a C++ library in future.
 
 
-Project contact: [Simon Beaumont](mailto:s@molemind.net) 
+Project contact: [Simon Beaumont](mailto:datalligator@icloud.com) 
 _______________________
 Copyright (c) 2012-2018 Simon Beaumont.
 
