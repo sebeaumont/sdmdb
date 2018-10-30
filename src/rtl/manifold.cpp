@@ -175,6 +175,7 @@ namespace sdm {
                          const std::string& vectorname,
                          topology& topo,
                          const double dub,
+                         const double dlb,
                          const double mlb,
                          const sdm_size_t cub) {
     
@@ -223,7 +224,7 @@ namespace sdm {
       double s = work[i*3+1];
       double o = work[i*3+2];
       // apply p-d-filter
-      if (r <= dub && s >= mlb) {
+      if (r > dlb && r <= dub && s >= mlb) {
         neighbour n(ssp->symbol_at(i).name(), r, s, o);
         topo.push_back(n);
       }
@@ -243,12 +244,13 @@ namespace sdm {
     return EUNIMPLEMENTED;
   }
   
-  // XXX let's get this working FFS!
+  /// allows pattern matching on an arbitrary plain sdm_vector_t
   sdm_status_t
   manifold::get_topology(const std::string& targetspace,
                          const sdm_vector_t& vector,
                          topology& topo,
                          const double dub,
+                         const double dlb,
                          const double mlb,
                          const sdm_size_t cub) {
 
@@ -291,7 +293,7 @@ namespace sdm {
       double s = work[i*3+1];
       double o = work[i*3+2];
       // apply p-d-filter
-      if (r <= dub && s >= mlb) {
+      if (r > dlb && r <= dub && s >= mlb) {
         neighbour n(sp->symbol_at(i).name(), r, s, o);
         topo.push_back(n);
       }
@@ -310,13 +312,11 @@ namespace sdm {
   }
   
   
-
   /*
-    XXX 
-    TODO check this if this is fixed
-    as had weird behaviour -- hangs or throws assersion errors
-    so I'm doing a workaround and cache all spaces at rts start up via ensure space_by_name
-    probably be quicker...
+    XXX TODO check this if this is fixed as had weird behaviour --
+    hangs or throws assersion errors so I'm doing a workaround and
+    cache all spaces at rts start up via ensure space_by_name probably
+    be quicker...
     
     std::pair<manifold::space*, std::size_t>
     manifold::get_space_by_name(const std::string& name) {
@@ -350,6 +350,7 @@ namespace sdm {
     for(; named_beg != named_end; ++named_beg){
       const segment_t::char_type *name = named_beg->name();
       std::size_t name_len = named_beg->name_length();
+      // XXX is this filter required any more?
       if (name[0] != '_')
         names.push_back(std::string(name, name_len));
       // constant void pointer to the named object
@@ -360,8 +361,9 @@ namespace sdm {
 
 
   // XXX manifold is meant to be readonly so this cant be here!
-  // create and manage named symbols by name -- space constructor does find_or_construct on segment
-  // then database memoizes pointers to spaces to speed up symbol resolution
+  // create and manage named symbols by name -- space constructor does
+  // find_or_construct on segment then database memoizes pointers to
+  // spaces to speed up symbol resolution
   
   std::pair<sdm_status_t, manifold::space*>
   manifold::ensure_space_by_name(const std::string& name) {

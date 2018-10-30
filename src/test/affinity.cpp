@@ -136,7 +136,7 @@ int main(const int argc, const char** argv) {
         level_set.reserve(r.second);
         // carefully provide all parameters
         sts = rts.get_topology(space_name, space_name, p.name, level_set,
-                               density_ub, metric_lb, r.second);
+                               density_ub, 0., metric_lb, r.second);
         if (!sdm_error(sts)) {
           for (database::neighbour n : level_set) {
             std::size_t j = feature_map.ensure(n.name);
@@ -162,6 +162,7 @@ int main(const int argc, const char** argv) {
       // serialize matrix to file
       {
         std::ofstream matf(space_name + ".mat");
+        // N.B. Affinity is symmetric!
         if (matf.good() && serialize_matrix(A, matf))
           matf.close();
       }

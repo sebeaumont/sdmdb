@@ -158,8 +158,9 @@ namespace sdm {
                  const std::string& sourcespace,
                  const std::string& vectorname,
                  topology& topo,
-                 const double dub = 0.5,
-                 const double mlb = 0.5,
+                 const double dub,
+                 const double dlb,
+                 const double mlb,
                  const sdm_size_t cub = -1);
 
     
@@ -172,8 +173,9 @@ namespace sdm {
     get_topology(const std::string& targetspace,
                  const sdm_vector_t& vector,
                  topology& top,
-                 const double dub = 0.5,
-                 const double mlb = 0.5,
+                 const double dub,
+                 const double dlb,
+                 const double mlb,
                  const sdm_size_t cub = -1);
 
     /* move to sdmlib c api 

@@ -13,11 +13,9 @@
 #include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/program_options.hpp>
-//#include <boost/filesystem.hpp>
 #include <boost/optional.hpp>
 #include <boost/optional/optional_io.hpp>
 
-// we are really testing
 
 #include "../rtl/database.hpp"
 
@@ -115,9 +113,9 @@ int main(int argc, const char** argv) {
   // co train terms in termspace?
   bool cotrain = false;
   // train with differentiated term instances
-  bool diffterms = false;
+  //bool diffterms = false;
   // reference count source symbols in superposition
-  bool refcount = false;
+  //bool refcount = false;
   // lines start with frame ids to group frames else assume 1 line/frame
   bool frameids = false;
 
@@ -137,10 +135,6 @@ int main(int argc, const char** argv) {
     ("help", "SDM frametrainer -- read (tsv) frames from stdin")
     ("frameids", po::bool_switch(&frameids),
      "data lines start with frame ids for grouping")
-    ("multisense", po::bool_switch(&diffterms),
-     "train with differentiated instances of terms")
-    ("refcount", po::bool_switch(&refcount),
-     "reference count source terms in training")
     ("cotrain", po::bool_switch(&cotrain),
      "co-train terms in termspace")
     ("symmetric", po::bool_switch(&symmetric),
@@ -205,8 +199,7 @@ int main(int argc, const char** argv) {
   cout << "framespace: " << (reverse_index ? framespace : "None") << endl;
   cout << "symmetric:  " << symmetric                             << endl;
   cout << "cotrain:    " << cotrain                               << endl;
-  cout << "multisense: " << diffterms                             << endl;
-  cout << "refcount:   " << refcount                              << endl;
+
   cout << "============================================="         << endl;
 
   // create database with requirement
@@ -259,6 +252,8 @@ int main(int argc, const char** argv) {
     // must at least have a frame id or a term
     if (tv.size() > 0) {
 
+      // XXX n.b. we are not aggregating frames for training!
+      
       if (frameids) {
         // detect change of frame 
         if (frameid != tv[0]) {
@@ -282,7 +277,7 @@ int main(int argc, const char** argv) {
 
       // assert reverse index if required
       if (reverse_index) for (string term: termset) {
-          db.superpose(framespace, frameid, termspace, term, diffterms);
+          db.superpose(framespace, frameid, termspace, term);
       }
 
       // cotrain terms in termspace
@@ -292,7 +287,7 @@ int main(int argc, const char** argv) {
         for (auto first = termset.begin(); first != termset.end(); ++first) {
           for (auto next = std::next(first); next != termset.end(); ++next) {
             // assert: first R next
-            db.superpose(termspace, *first, termspace, *next, diffterms);
+            db.superpose(termspace, *first, termspace, *next);
             // if aRb => bRa then reify next R first
             if (symmetric) db.superpose(termspace, *next, termspace, *first);
           }

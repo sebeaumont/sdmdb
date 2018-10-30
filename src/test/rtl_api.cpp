@@ -79,9 +79,9 @@ BOOST_AUTO_TEST_CASE(rtl_api) {
     
   database::topology t;
   t.reserve(20);
-  sts = db.get_topology("names", v, t);
+  sts = db.get_topology("names", v, t, 1., 0., 0.5);
   BOOST_REQUIRE(!sdm_error(sts));
-  BOOST_REQUIRE(t.size() > 2);
+  BOOST_REQUIRE(t.size() > 0);
 
   // load elemental...
   
