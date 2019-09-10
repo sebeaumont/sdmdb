@@ -1,7 +1,7 @@
 SDMLIB - Sparse Distributed Memory Database 
 ===========================================
 
-Unreleased Apha version -- Planned Public Release Milestone December 2018
+Unreleased Researchware
 
 The main artefact of the project is the sdm runtime library which
 offers a high performance sparse distributed memory or semantic vector
