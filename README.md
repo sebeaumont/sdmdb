@@ -24,8 +24,8 @@ implementation and small c/c++ modules to facilitate integration into
 various foreign language environments. Watch this space. 
 
 
-Building 
--------- 
+## Building 
+ 
 
 Requires cmake and (recommended) out of source build the build type
 Release is cruicial (unless a default Debug build is required) else
@@ -39,8 +39,8 @@ make
 make test && make install
 ```
 
-C++ Documentation
------------------
+## C++ Documentation
+
 
 Requires doxygen
 
@@ -48,11 +48,11 @@ Requires doxygen
 doxygen
 
 
-Project contact: [Simon Beaumont](mailto:datalligator@icloud.com) 
+# Project contact
+[Simon Beaumont](mailto:datalligator@icloud.com) 
 _______________________
 Copyright (c) 2012-2018 Simon Beaumont.
 
-See: LICENSE for terms and conditions under which this software is
-made available.
+See: LICENSE for terms and conditions under which this software is made available.
 
 
