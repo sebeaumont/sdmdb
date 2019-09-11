@@ -1,7 +1,7 @@
 SDMLIB - Sparse Distributed Memory Database 
 ===========================================
 
-Unreleased Researchware
+Un-released Researchware
 
 The main artefact of the project is the sdm runtime library which
 offers a high performance sparse distributed memory or semantic vector
@@ -24,9 +24,8 @@ implementation and small c/c++ modules to facilitate integration into
 various foreign language environments. Watch this space. 
 
 
-## Building 
+# Building 
  
-
 Requires cmake and (recommended) out of source build the build type
 Release is cruicial (unless a default Debug build is required) else
 performance will be an order of magnitude or more worse.
@@ -39,19 +38,12 @@ make
 make test && make install
 ```
 
-## C++ Documentation
-
-
-Requires doxygen
-
-```shell
-doxygen
-
 
 # Project contact
+
 [Simon Beaumont](mailto:datalligator@icloud.com) 
 _______________________
-Copyright (c) 2012-2018 Simon Beaumont.
+Copyright (c) 2012-2019 Simon Beaumont.
 
 See: LICENSE for terms and conditions under which this software is made available.
 
